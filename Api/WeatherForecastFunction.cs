@@ -28,7 +28,7 @@ namespace Api
                 Summary = GetSummary(temp)
             }).ToArray();
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
+			var response = req.CreateResponse(HttpStatusCode.OK);
             response.WriteAsJsonAsync(result);
 
             return response;
