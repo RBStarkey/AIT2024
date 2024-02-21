@@ -1,9 +1,47 @@
 ﻿@page "/"
-
+@using BlazorApp.Client.Pages.Components
 <PageTitle>Home</PageTitle>
 
 <h1>Hello ACCESSible IT!</h1>
 
 Hello ACCESSible IT! Second Version 12:00
 
-<i class="bi bi-envelope"></i>
+<div class="row">
+	<h5>
+		Test line
+		<sup>
+			<i class="bi bi-info-circle"
+			   style="color:blue"
+			   @onclick='() => InfoClick("This is a help Message To show an element only on a given interval of screen sizes you can combine one")'>
+			</i>
+		</sup>
+	</h5>
+</div>
+@if(ShowAlert)
+{
+<div class="alert alert-info" role="alert" @onclick="() => InfoClick(string.Empty)">
+	@CurrentHelpMessage
+</div>
+}
+<row class="w-100">
+	The is the label<HelpMessage ShowMessage="@true" CurrentHelpMessage=@("This is a string")></HelpMessage>
+</row>
+@code {
+	bool ShowAlert = false;
+	string? CurrentHelpMessage { get; set; } = string.Empty;
+
+	void InfoClick(string? HelpMessage)
+	{
+		if (string.IsNullOrEmpty(HelpMessage) || ShowAlert)
+		{
+			ShowAlert = false;
+			CurrentHelpMessage = null;
+		}
+		else
+		{
+			ShowAlert = true;
+			CurrentHelpMessage = HelpMessage;
+		}
+	}
+}
+
