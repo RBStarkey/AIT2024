@@ -1,19 +1,20 @@
-﻿
-	<sup>
-		<i class="bi bi-info-circle ps-2  h6"
-	   style="color:blue; font-weight: bold"
-		   @onclick="() => InfoClick(CurrentHelpMessage)">
-		</i>
-	</sup>
+﻿<sup>
+	<i class="bi bi-info-circle ps-2  h6"
+	   style="color:blue; font-weight: bold; cursor:grab"
+	   @onclick="() => InfoClick(CurrentHelpMessage)">
+	</i>
+</sup>
 
 @if (ShowMessage)
 {
-	<div class="alert alert-info" role="alert" @onclick="() => InfoClick(string.Empty)">
-		@CurrentHelpMessage
+	<div class="row">
+		<div class="alert alert-info" Dismissable="true" role="alert" @onclick="() => InfoClick(string.Empty)">
+			@CurrentHelpMessage
+		</div>
 	</div>
+
 }
 @code {
-	[Parameter]
 	public bool ShowMessage { get; set; }
 	[Parameter]
 	public string? CurrentHelpMessage { get; set; }
