@@ -1,4 +1,5 @@
 using System.Net;
+using System.Reflection;
 using BlazorApp.Shared;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -30,8 +31,7 @@ namespace Api
 
 			var response = req.CreateResponse(HttpStatusCode.OK);
             response.WriteAsJsonAsync(result);
-
-            return response;
+			return response;
         }
 
         private string GetSummary(int temp)

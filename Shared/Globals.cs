@@ -25,7 +25,11 @@ namespace BlazorApp.Shared
 		public const string PhoneContains = "Phone Contains:";
 		public const string DateModifiedFilter = "Filter Date Modified:";
 
-		public static bool IsValidEmail(string email)
+        public const string AIT2024Container = "ait2024container";
+        public const string BlobContainerDoesNotExist = "Blob container does mot exist";
+        public const string OK = "OK";
+
+        public static bool IsValidEmail(string email)
         {
             //https://docs.microsoft.com/en-us/dotnet/standard/base-types/how-to-verify-that-strings-are-in-valid-email-format
 
@@ -101,7 +105,7 @@ namespace BlazorApp.Shared
             if (birthday.Date > today.AddYears(-age)) age--;
             return age;
         }
-        public static List<string> GetSearchTypeList()
+		public static List<string> GetSearchTypeList()
         {
             List<string> list = new List<string>();
             list.Add(LastNameStarts);

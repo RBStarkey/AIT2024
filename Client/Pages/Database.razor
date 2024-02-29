@@ -1,0 +1,645 @@
+﻿@page "/database"
+@using BlazorApp.Client.Data
+@using BlazorApp.Client.Models
+@using BlazorApp.Client.Services
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject NavigationManager NavMan
+
+<div class="container-fluid p-0 m-0">
+	<div class="row w-100 d-inline-flex mb-2" style="background-color:navy">
+		<div class="col-sm-11 d-flex justify-content-center" style="padding-top:0.6em">
+			<h3 style="color:white">Database Demo</h3>
+		</div>
+		<div class="col-sm-1 d-flex justify-content-end" style="padding-top:0.7em">
+			<button class="btn-link" style="background-color:transparent;border-color:transparent"
+					@onclick=HelpClick>
+				<sup><i class="bi bi-info-circle" style="font-size: 2rem; color: white;"></i></sup>
+			</button>
+		</div>
+	</div>
+	<div class="row w-100 d-inline-flex mb-2" style="background-color:navy">
+		<div class="col align-middle d-sm-inline-flex w-100 d-flex justify-content-center border-bottom p-1" style="height:auto;background-color:gainsboro">
+			<label class="label pt-2" style="display:block; width:10em">Select Search Type</label>
+			<select class="form-select" style="max-width:16em"
+					@onchange="SearchTypeOnChange">
+				@if (SearchTypeList.Count > 0)
+				{
+					@foreach (var type in SearchTypeList)
+					{
+						<option value="@type">@type</option>
+					}
+				}
+			</select>
+
+			@if (ShowSearchParam)
+			{
+				<label class="label pt-2" style="padding-left:1em">&nbsp;Filter&nbsp;</label>
+				<input @oninput="SearchParamOnInput" value="@FilterParameter"
+					   class="form-control" type="text" style="max-width:8em;background-color:cornsilk" />
+			}
+			else
+			{
+				<label class="control-label pt-2" style="width:7em;text-align:center">&nbsp;Date-From&nbsp;</label>
+				<input class="form-control mr-2" type="date" @bind="DateFrom" style="width:10em" />
+				<label class="control-label pt-2" style="width:7em;text-align:center">Date-To</label>
+				<input class="form-control mr-2" type="date" @bind="DateTo" style="width:10em" />
+				<button type="button" class="btn btn-primary" @onclick="DateFilterClick" style="width:5em">
+					Filter
+				</button>
+			}
+			<button type="button" class="fas fa-question-circle d-flex justify-content-end"
+					@onclick="ShowHelpSearchParamClick"
+					style="font-size:1em;border:none;color:#0000EE;
+                            background-color:transparent;cursor:pointer">
+			</button>
+		</div>
+	</div>
+
+	
+
+	@if (SearchParamError.Length > 0)
+	{
+		<div class="alert alert-danger alert-dismissible mt-2" role="alert" style="height:auto;color:black;font-weight:700;">
+			<span class="oi oi-warning" style="font-size:1.5em;color:red" aria-hidden="true"></span>
+			&nbsp;@SearchParamError.ToString()
+		</div>
+	}
+	@if (ShowPersonModal)
+	{
+		<div id="personModal" class="modal" tabindex="-1" style="display:block" role="dialog">
+			<div class="modal-dialog  modal-sm">
+				<div class="modal-content">
+					<EditForm id="personForm" Model="@SelectedPerson" OnSubmit="@OnSubmitPerson">
+						<DataAnnotationsValidator />
+						<div class="modal-header @ModalHeaderColour text-white">
+							<div class="row">
+								<h3 class="modal-title">
+									@ModalTitleCaption
+								</h3>
+							</div>
+						</div>
+						<div class="modal-body" style="background-color:gainsboro">
+							@if (PersonModalDangerMessage.Length > 0)
+							{
+								<div class="alert alert-danger" role="alert">
+									@PersonModalDangerMessage;
+								</div>
+							}
+							<label class="control-label mt-2">Title (Click to select)</label>
+							<InputSelect class="form-control" @bind-Value="SelectedPerson.Title">
+								<option value="">@SelectString</option>
+								<option value="Mr">Mr</option>
+								<option value="Mrs">Mrs</option>
+								<option value="Ms">Ms</option>
+								<option value="NotStated">Not Stated</option>
+							</InputSelect>
+							<ValidationMessage For="@(() => SelectedPerson.Title)" />
+
+							<label class="control-label mt-2">Last Name</label>
+							<InputText id="LastName" class="form-control" @bind-Value="SelectedPerson.LastName" />
+							<ValidationMessage For="@(() => SelectedPerson.LastName)" />
+
+							<label class="control-label mt-2">Middle Name</label>
+							<InputText id="MiddleName" class="form-control" @bind-Value="SelectedPerson.MiddleName" />
+
+							<label class="control-label mt-2">First Name</label>
+							<InputText id="FirstName" class="form-control" @bind-Value="SelectedPerson.FirstName" />
+							<ValidationMessage For="@(() => SelectedPerson.FirstName)" />
+
+							<label class="control-label mt-2">Company Name</label>
+							<InputText id="CompanyName" class="form-control" @bind-Value="SelectedPerson.CompanyName" />
+							<ValidationMessage For="@(() => SelectedPerson.CompanyName)" />
+
+							<label class="control-label mt-2">Phone</label>
+							<InputText id="Phone" class="form-control" @bind-Value="SelectedPerson.Phone" />
+							<ValidationMessage For="@(() => SelectedPerson.Phone)" />
+
+							<label class="control-label mt-2">Email Address</label>
+							<InputText id="EmailAddress" class="form-control" @bind-Value="SelectedPerson.EmailAddress" />
+							<ValidationMessage For="@(() => SelectedPerson.EmailAddress)" />
+
+							<label class="control-label mt-2">Modified Date</label>
+							<label class="form-control" readonly>@SelectedPerson.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</label>
+							<label class="control-label mt-2">ID</label>
+							<label class="form-control" style="height:auto" readonly>@SelectedPerson.Id.ToString()</label>
+
+						</div>
+						<div class="modal-footer" style="background-color:silver">
+							<div class="col d-flex justify-content-start">
+								<button type="submit" class="btn btn-success">
+									Save
+								</button>
+							</div>
+
+							<div class="col d-flex justify-content-end">
+								<button type="button" class="btn alert-primary"
+										@onclick="HidePersonModalClick">
+									Cancel
+								</button>
+							</div>
+						</div>
+					</EditForm>
+				</div>
+			</div>
+		</div>
+	}
+	@if (ShowHelpModal)
+	{
+		<div class="modal" tabindex="-1" style="display:block;" role="dialog">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header" style="background-color:Navy;color:white">
+						<h3 class="modal-title">
+							Help
+						</h3>
+					</div>
+					<div class="modal-body">
+						<h4>Records</h4>
+						<p>
+							There are 847 fictitious records in the data set, these were taken from the Customers table
+							of Microsoft's Adventureworks LT2017 database.
+						</p>
+						<p>
+							If you add, alter or delete a record those changes will only take place whilst the form is loaded.
+							If you navigate to another form and then return, the original data will appear.
+						</p>
+						<p>
+							There is a limit of 900 records on the table to prevent malign attacks.
+						</p>
+
+						<h4>Searching - Names, ID etc.etc</h4>
+						<p>
+							You can search for any of the values in the drop down list.  The functionality demonstrates filtering as you type.
+							Using the first three or four characters of the ID finds the record quickly with very few false positives.
+							Users find this is the quickest way to bring up the target record.
+						</p>
+						<h4>Searching - Dates</h4>
+						<p>
+							The date-search allows to you search over a range of dates or, if you insert the same date in Date-From and Date-To it will return records just for that day.
+							The date-range for the demo data runs from 12 Jan 2018 to 5 May 2020.
+						</p>
+						<h4>Searching - Email Address</h4>
+						<p>
+							The ability to search for an email address is helpful if you send out group emails and you get 'bouncers' from incorrect email addresses.
+						</p>
+						<h4>Searching - Telephone Number</h4>
+						<p>
+							This comes in useful when a colleague with scrawly handwriting takes a message and leaves a note with an illegible phone number.
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary"
+								@onclick="HideHelpModalClick">
+							Close
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+	@if (ShowErrorModal)
+	{
+		<div class="modal" tabindex="-1" style="display:block;" role="dialog">
+			<div class="modal-dialog small">
+				<div class="modal-content">
+					<div class="modal-header" style="background-color:firebrick;color:white">
+						<h3 class="modal-title">
+							Error
+						</h3>
+					</div>
+					<p>
+						@ErrorMessage.ToString()
+					</p>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary"
+								@onclick="HideHelpModalClick">
+							Close
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+	@if (ShowDeleteModal)
+	{
+		<div class="modal" tabindex="-1" style="display:block;" role="dialog">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+					<div class="modal-header" style="background-color:red;color:white">
+						<h3 class="modal-title">
+							Delete
+						</h3>
+					</div>
+					<div class="modal-body">
+						<h4>Do you want to permanently delete the record for...</h4> <br />
+						<div class="form-row">
+							<h4>@SelectedPerson.FirstName&nbsp;@SelectedPerson.LastName?</h4>
+						</div>
+						<br />
+						<div class="form-row">
+							<h5>ID:&nbsp;@SelectedPerson.Id</h5>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<label>Note: this is a demo deletion.  Next time the form opens, all the demo data will re-appear</label>
+						<div class="col d-flex justify-content-start">
+							<button type="button" class="btn btn-danger ml-2" style="width:5em"
+									@onclick="() => DeleteSelectedPerson(SelectedPerson.Id.ToString())">
+								Yes
+							</button>
+						</div>
+						<div class="col d-flex justify-content-end">
+							<button type="button" class="btn btn-primary" style="width:5em"
+									@onclick="HideDeleteModalClick">
+								Cancel
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+	<!--Table-->
+	<table class="table table-striped table-responsive w-100 d-block d-md-table">
+		<thead class="thead-dark">
+			<tr>
+				<th style="text-align:left" scope="col">
+					<button class="btn btn-success" type="button"
+							style="width:5em" @onclick="() => PersonButtonClick(Guid.Empty)">
+						New
+					</button>
+				</th>
+				<th style="text-align:center" scope="col">ID</th>
+				<th style="text-align:center" scope="col">Last Name</th>
+				<th style="text-align:center" scope="col">First Name</th>
+				<th style="text-align:center" scope="col">Title</th>
+				<th style="text-align:center" scope="col">Phone (fictitious)</th>
+				<th style="text-align:center" scope="col">Email (fictitious)</th>
+				<th style="text-align:center" scope="col">Date Modified</th>
+				<th style="text-align:center">Rows:&nbsp;@FilteredList.Count.ToString()</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (Person person in FilteredList)
+			{
+				<tr>
+					<td>
+						<button class="btn btn-primary" type="button" @onclick="() => PersonButtonClick(person.Id)" //EditPersonButtonClick
+								style="width:5em">
+							Edit
+						</button>
+					</td>
+					<td style="width:12em">@person.Id.ToString()</td>
+					<td>@person.LastName</td>
+					<td>@person.FirstName</td>
+					<td>@person.Title</td>
+					<td><a href="tel:@person.Phone">@person.Phone</a></td>
+					<td><a href="mailto:@person.EmailAddress.ToString()">@person.EmailAddress</a></td>
+					<td style="text-align:center">@person.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</td>
+					<td style="text-align:center">
+						<button class="btn btn-danger" type="button" @onclick="() => DeleteClick(person.Id.ToString())"
+								style="width:5em">
+							Delete
+						</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<div class="mt-4">
+		<a class="btn btn-sm btn-info" href="javascript: document.body.scrollIntoView(true);">Top</a>
+	</div>
+	<!--Help-->
+	<div class="offcanvas offcanvas-end @ShowHelp" tabindex="-1" id="offcanvasExample"
+		 aria-labelledby="offcanvasExampleLabel"
+		 aria-modal="true" role="dialog" style="visibility: visible;background-color:gainsboro">
+		<div class="offcanvas-header">
+			<h5 class="offcanvas-title" id="offcanvasExampleLabel">Database Help</h5>
+			<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close" @onclick=HideHelpClick></button>
+		</div>
+		<div class="offcanvas-body">
+			<div>
+				<h5>Filtering</h5>
+				<p>
+					This page demonstrates the ability to find someone quickly.  The search-type allows the user to find a record by a field value or values.
+				</p>
+				<h5>Limits to Editing</h5>
+				<p>
+					Although the Save button implies that you will be changing and saving a record, the changes only last until you close the page.  In a real system these changes would be written back to a web database.
+				</p>
+				<h5>Intuitive Design</h5>
+				<p>
+					Our experience shows that staff take to this sort of filter-and-find functionality immediately.
+				</p>
+				<p>
+					Strangely enough, being able to find someone using the first
+					three or four digits of their ID turns out to be the preferred method of searching.
+				</p>
+				<h5>Reduced Training</h5>
+				<p>
+					Training is the oil of efficiency and should always accompany the
+					introduction of a new system.  Covid-19 has shown that
+					remote-working is a pragmatic option in a digital society.
+					As long as the system uses a consistent design and does not crowd
+					forms with buttons galore, forms like this make training enjoyable.
+				</p>
+				<h5>Accuracy and Immediate Communication</h5>
+				<p>
+					Being able to correct or bring up-to-date a person's record at the
+					touch of a button means that staff can keep data in step with reality with little effort
+				<p>
+					Making a telephone call by simply clicking a number or sending an
+					email by clicking an email address enhances a company's reputation for responsiveness.
+				</p>
+				<p>
+					It is possible to send bulk emails; if you send less than 25,000 a month. they cost nothing
+				</p>
+				</p>
+				<h5>Advantages of Fast Lookup</h5>
+				<p>
+					At the end of the page there are some notes about the advantages of fast look up.<a class="btn btn-sm btn-outline-info ml-2" href="javascript: document.body.scrollIntoView(false);"><i class="fas fa-arrow-down"></i></a>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+@code {
+	JsonBlobService jsonBlobService = new();
+	bool IsLoading = true;
+	bool ShowSearchParam = true;
+	bool ShowErrorModal = false;
+	string PersonModalDangerMessage = "";
+	string ErrorMessage = string.Empty;
+	bool ShowPersonModal { get; set; } = false;
+	bool ShowHelpModal = false;
+	bool ShowDeleteModal = false;
+	string SelectString = "Select...";
+	string ModalHeaderColour = "bg-success";
+
+	DateTime? DateFrom = null;
+	DateTime? DateTo = null;
+
+	private List<string> SearchTypeList = Globals.GetSearchTypeList();
+
+	private List<Person> PersonList = new List<Person>();
+	private List<Person> FilteredList = new List<Person>();
+
+	// Start off showing a search for Last Name Begins
+	private string SearchType = Globals.LastNameStarts;
+	private string FilterParameter = "van"; //Demo start-up name fragment
+
+	private string SearchParamError = string.Empty;
+	private Person SelectedPerson { get; set; } = new();
+	private string ModalTitleCaption = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		IsLoading = true;
+		string jsonFile = await Http.GetStringAsync("/api/GetJsonFile?fileName=People.json");
+		PersonList = JsonConvert.DeserializeObject<List<Person>>(jsonFile);
+		FilteredList = PersonList.FindAll(x => x.LastName.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
+		IsLoading = false;
+	}
+
+	private void SearchTypeOnChange(ChangeEventArgs e)
+	{
+		ShowErrorModal = false; ErrorMessage = string.Empty;
+		SearchType = e.Value?.ToString() ?? "";
+		SearchParamError = string.Empty;
+		if (SearchType == Globals.DateModifiedFilter)
+		{
+			ShowSearchParam = false;
+			return;
+		}
+		else
+		{
+			ShowSearchParam = true;
+		}
+		if (!string.IsNullOrEmpty(FilterParameter))
+		{
+			DoFilter(SearchType, FilterParameter);
+		}
+	}
+	private void DateFilterClick(MouseEventArgs e)
+	{
+		SearchParamError = string.Empty;
+
+		if (!DateFrom.HasValue)
+		{
+			SearchParamError = "Please insert a Date-From";
+			return;
+		}
+		if (!DateTo.HasValue)
+		{
+			SearchParamError = "Please insert a Date-To";
+			return;
+		}
+		if (DateFrom.Value > DateTo.Value)
+		{
+			SearchParamError = "Date-From must be earlier or the same as Date-To";
+			return;
+		}
+		// Set to last minute of the day
+		DateTo = DateTo.Value.AddHours(23).AddMinutes(59);
+
+		FilteredList.Clear();
+		FilteredList = FilteredList.Where(x => x.ModifiedDate >= DateFrom && x.ModifiedDate <= DateTo).ToList();
+	}
+	private void ShowHelpSearchParamClick()
+	{
+		ShowErrorModal = false; ErrorMessage = string.Empty;
+		ShowHelpModal = true;
+	}
+	private void HideHelpModalClick()
+	{
+		ShowHelpModal = false;
+	}
+	private void SearchParamOnInput(ChangeEventArgs e)
+	{
+		if (e.Value != null)
+		{
+			if (string.IsNullOrEmpty(e.Value.ToString()))
+			{
+				FilterParameter = string.Empty;
+				FilteredList.Clear();
+				return;
+			}
+
+		}
+		if (Globals.StringCharsOK(e.Value?.ToString() ?? ""))
+		{
+			SearchParamError = string.Empty;
+			FilterParameter = e.Value?.ToString() ?? "";
+			DoFilter(SearchType, FilterParameter);
+			return;
+		}
+		else
+		{
+			FilteredList.Clear();
+			SearchParamError = "Search parameter can only have letters in the range A-Z, a-z, digits in the range 0-9, spaces or a dash('-') It cannot be more than 20 characters long.";
+			return;
+		}
+	}
+	private void PersonButtonClick(Guid id)  //Could be Edit or New Button
+	{
+		ShowPersonModal = false;
+		if (id == Guid.Empty) //This is a new record
+		{
+			SelectedPerson = new Person();
+			SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
+			SelectedPerson.Id = Guid.Empty;  // Signals that this record must be saved
+			ModalHeaderColour = "bg-success";
+			ModalTitleCaption = "New Person";
+		}
+		else
+		{
+			ModalHeaderColour = "bg-primary";
+			ModalTitleCaption = "Edit Person";
+			Person? person = FilteredList.FirstOrDefault(p => p.Id == id);
+			if (person == null)
+			{
+				SelectedPerson = new();
+			}
+			else
+			{
+				SelectedPerson = person;
+			}
+		}
+		ShowPersonModal = true;
+	}
+	private void OnSubmitPerson(EditContext context)
+	{
+		ShowErrorModal = false; ErrorMessage = string.Empty;
+		bool formIsValid = context.Validate();
+		if (formIsValid)
+		{
+			PersonModalDangerMessage = string.Empty;
+		}
+		else
+		{
+			PersonModalDangerMessage = "There are input errors, please check the form";
+			return;
+		}
+		if (SelectedPerson.Title == SelectString)
+		{
+			PersonModalDangerMessage = "Please select a title";
+			return;
+		}
+		if (SelectedPerson.MiddleName == null)
+		{
+			SelectedPerson.MiddleName = string.Empty;
+		}
+		SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
+
+		if (SelectedPerson.Id == Guid.Empty)
+		{
+			// This is a new record
+			SelectedPerson.Id = Guid.NewGuid();
+			// Prevent malign attacks
+			if (FilteredList.Count < 900) // 847 in the json file
+			{
+				FilteredList.Insert(0, SelectedPerson);
+				//FilteredList.Insert(0, SelectedPerson);
+			}
+		}
+		else
+		{
+			int index = FilteredList.FindIndex(x => x.Id == SelectedPerson.Id);
+			if (index == -1)
+			{
+				ErrorMessage = "Can't find person record with the ID: " + SelectedPerson.Id;
+				ShowErrorModal = true;
+				return;
+			}
+			FilteredList[index] = SelectedPerson;
+		}
+		HidePersonModalClick();
+	}
+	private void HidePersonModalClick()
+	{
+		ShowPersonModal = false;
+		PersonModalDangerMessage = string.Empty;
+	}
+	private void DeleteClick(string id)
+	{
+		Person? person = FilteredList.Find(p => p.Id.ToString() == id);
+		if (person == null)
+		{
+			ErrorMessage = "Delete Click. Can't find person with ID: " + id;
+			ShowErrorModal = true;
+			return;
+		}
+		else
+		{
+			SelectedPerson = person;
+			ShowDeleteModal = true;
+		}
+	}
+	private void DeleteSelectedPerson(string id)
+	{
+		Person? person = FilteredList.SingleOrDefault(r => r.Id.ToString() == id);
+		if (person == null)
+		{
+			ErrorMessage = "Delete Selected Person: Can't find selected person with ID: " + id;
+			ShowErrorModal = true;
+			return;
+		}
+		else
+		{
+			FilteredList.Remove(person);
+		}
+		ShowDeleteModal = false;
+	}
+	private void HideDeleteModalClick()
+	{
+		ShowDeleteModal = false;
+	}
+	private void DoFilter(string searchType, string FilterParameter)
+	{
+		FilteredList.Clear();
+		if (FilterParameter.Length == 0)
+		{
+			return;
+		}
+		switch (searchType)
+		{
+			case Globals.LastNameStarts:
+				FilteredList = PersonList.Where(x => x.LastName.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
+				break;
+			case Globals.LastNameContains:
+				FilteredList = PersonList.Where(x => x.LastName.ToLower().Contains(FilterParameter.ToLower())).ToList();
+				break;
+			case Globals.FirstNameStarts:
+				FilteredList = PersonList.Where(x => x.FirstName.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
+				break;
+			case Globals.FirstNameContains:
+				FilteredList = PersonList.Where(x => x.FirstName.ToLower().Contains(FilterParameter.ToLower())).ToList();
+				break;
+			case Globals.IDBegins:
+				FilteredList = PersonList.Where(x => x.Id.ToString().StartsWith(FilterParameter)).ToList();
+				break;
+			case Globals.EmailAddressStarts:
+				FilteredList = PersonList.Where(x => x.EmailAddress.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
+				break;
+			case Globals.PhoneContains:
+				FilteredList = PersonList.Where(x => x.Phone.ToLower().Contains(FilterParameter.ToLower())).ToList();
+				break;
+		}
+	}
+	string ShowHelp { get; set; } = "";
+	void HelpClick()
+	{
+		ShowHelp = "show";
+	}
+	void HideHelpClick()
+	{
+		// Is the help panel showing?
+		if (ShowHelp == "show")
+		{
+			ShowHelp = "";
+		}
+	}
+}
+
