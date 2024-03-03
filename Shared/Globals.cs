@@ -76,15 +76,28 @@ namespace BlazorApp.Shared
         }
         public static DateTime GetUKDateTime()
         {
-            // https://msdn.microsoft.com/en-us/library/bb397769(v=vs.110).aspx
-            // http://stackoverflow.com/questions/5601160/custom-date-time-format
+			// https://msdn.microsoft.com/en-us/library/bb397769(v=vs.110).aspx
+			// http://stackoverflow.com/questions/5601160/custom-date-time-format
+			// https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+			// https://codeshare.co.uk/blog/how-to-display-the-current-time-in-british-summer-time-using-c/
+			// get the current UTC time
+			DateTime localServerTime = DateTime.UtcNow;
 
-            TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
-            DateTime UKDateTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, timeZoneInfo);
+			//Find out if the zone is in daylight saving time or not.
+			TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+			bool isDaylightSavingTime = timeZoneInfo.IsDaylightSavingTime(localServerTime);
 
-            return UKDateTime;
-        }
-        public int CalculateAge(DateTime birthDate)
+			//set the time to be the local server time
+			DateTime UKDateTime = localServerTime;
+
+			//if the zone is in British Summer Time, add an hour.
+			if (isDaylightSavingTime)
+			{
+				UKDateTime = UKDateTime.AddHours(1);
+			}
+			return UKDateTime;
+		}
+		public int CalculateAge(DateTime birthDate)
         {
 
 
