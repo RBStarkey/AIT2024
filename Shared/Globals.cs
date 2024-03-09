@@ -28,8 +28,9 @@ namespace BlazorApp.Shared
         public const string AIT2024Container = "ait2024container";
         public const string BlobContainerDoesNotExist = "Blob container does mot exist";
         public const string OK = "OK";
+		public const string SearchDotDotDot = "Search...";
 
-        public static bool IsValidEmail(string email)
+		public static bool IsValidEmail(string email)
         {
             //https://docs.microsoft.com/en-us/dotnet/standard/base-types/how-to-verify-that-strings-are-in-valid-email-format
 

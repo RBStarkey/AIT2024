@@ -51,5 +51,8 @@ namespace BlazorApp.Client.Models
         [DisplayName("Modified Date-Time")]
         [Range(typeof(DateTime), "1 Jan 1970", "31 Dec 3000", ErrorMessage = "Value for {0} must be between {1} and {2}")]
         public DateTime ModifiedDate { get; set; }
-    }
+
+		[DisplayName("Search Terms")]
+		public string SearchTerms { get; set; } = string.Empty;
+	}
 }

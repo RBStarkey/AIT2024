@@ -1,6 +1,7 @@
 ﻿@page "/database"
 @using BlazorApp.Client.Data
 @using BlazorApp.Client.Models
+@using BlazorApp.Client.Pages.Components
 @using BlazorApp.Client.Services
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Newtonsoft.Json
@@ -10,7 +11,7 @@
 <div class="container-fluid p-0 m-0">
 	<div class="row w-100 d-inline-flex mb-2" style="background-color:navy">
 		<div class="col-sm-11 d-flex justify-content-center" style="padding-top:0.6em">
-			<h3 style="color:white">Database Demo (Records:&nbsp;@FilteredList.Count.ToString())</h3>
+			<h3 style="color:white">Database Demo (Records:&nbsp;@RowIndex.ToString()) &nbsp;</h3>
 		</div>
 		<div class="col-sm-1 d-flex justify-content-end" style="padding-top:0.7em">
 			<button class="btn-link" style="background-color:transparent;border-color:transparent"
@@ -21,39 +22,14 @@
 	</div>
 	<div class="row w-100 d-inline-flex mb-2" style="background-color:navy">
 		<div class="col align-middle d-sm-inline-flex w-100 d-flex justify-content-center border-bottom p-1" style="height:auto;background-color:gainsboro">
-			<label class="label pt-2" style="display:block; width:10em">Select Search Type</label>
-			<select class="form-select" style="max-width:16em"
-					@onchange="SearchTypeOnChange">
-				@if (SearchTypeList.Count > 0)
-				{
-					@foreach (var type in SearchTypeList)
-					{
-						<option value="@type">@type</option>
-					}
-				}
-			</select>
-
-			@if (ShowSearchParam)
-			{
-				<label class="label pt-2" style="padding-left:1em">&nbsp;Filter&nbsp;</label>
-				<input @oninput="SearchParamOnInput" value="@FilterParameter"
-					   class="form-control" type="text" style="max-width:8em;background-color:cornsilk" />
-			}
-			else
-			{
-				<label class="control-label pt-2" style="width:7em;text-align:center">&nbsp;Date-From&nbsp;</label>
-				<input class="form-control mr-2" type="date" @bind="DateFrom" style="width:10em" />
-				<label class="control-label pt-2" style="width:7em;text-align:center">Date-To</label>
-				<input class="form-control mr-2" type="date" @bind="DateTo" style="width:10em" />
-				<button type="button" class="btn btn-primary" @onclick="DateFilterClick" style="width:5em">
-					Filter
-				</button>
-			}
-			<button type="button" class="fas fa-question-circle d-flex justify-content-end"
-					@onclick="ShowHelpSearchParamClick"
-					style="font-size:1em;border:none;color:#0000EE;
-                            background-color:transparent;cursor:pointer">
-			</button>
+			<sup style="margin-top:4px">
+				<i class="bi bi-info-circle ps-2 h5"
+				   style="color:blue; font-weight: bold; cursor:grab"
+				   @onclick="() => InfoClick()">
+				</i>
+			</sup>
+			&nbsp;&nbsp;
+			<SearchBox SearchQueryChanged="ValueChanged" SearchQuery=@Filter />
 		</div>
 	</div>
 
@@ -146,7 +122,7 @@
 	@if (ShowHelpModal)
 	{
 		<div class="modal" tabindex="-1" style="display:block;" role="dialog">
-			<div class="modal-dialog modal-lg">
+			<div class="modal-dialog modal-sm">
 				<div class="modal-content">
 					<div class="modal-header" style="background-color:Navy;color:white">
 						<h3 class="modal-title">
@@ -154,40 +130,18 @@
 						</h3>
 					</div>
 					<div class="modal-body">
-						<h4>Records</h4>
+						<h4>Alternative Display of Help</h4>
 						<p>
-							There are 847 fictitious records in the data set, these were taken from the Customers table
-							of Microsoft's Adventureworks LT2017 database.
+							By placing a <i class="bi bi-info-circle"></i> button close to the search box, the user is given a context cue that help is offered when searching
 						</p>
 						<p>
-							If you add, alter or delete a record those changes will only take place whilst the form is loaded.
-							If you navigate to another form and then return, the original data will appear.
+							The main help will be found by clicking the <i class="bi bi-info-circle"></i> button in the blue band - top right. 
 						</p>
 						<p>
-							There is a limit of 900 records on the table to prevent malign attacks.
-						</p>
-
-						<h4>Searching - Names, ID etc.etc</h4>
-						<p>
-							You can search for any of the values in the drop down list.  The functionality demonstrates filtering as you type.
-							Using the first three or four characters of the ID finds the record quickly with very few false positives.
-							Users find this is the quickest way to bring up the target record.
-						</p>
-						<h4>Searching - Dates</h4>
-						<p>
-							The date-search allows to you search over a range of dates or, if you insert the same date in Date-From and Date-To it will return records just for that day.
-							The date-range for the demo data runs from 12 Jan 2018 to 5 May 2020.
-						</p>
-						<h4>Searching - Email Address</h4>
-						<p>
-							The ability to search for an email address is helpful if you send out group emails and you get 'bouncers' from incorrect email addresses.
-						</p>
-						<h4>Searching - Telephone Number</h4>
-						<p>
-							This comes in useful when a colleague with scrawly handwriting takes a message and leaves a note with an illegible phone number.
+							This help-variation is an option that could be used where important guidance needs to be reinforced.
 						</p>
 					</div>
-					<div class="modal-footer">
+					<div class="modal-footer" style="background-color:gainsboro">
 						<button type="button" class="btn btn-primary"
 								@onclick="HideHelpModalClick">
 							Close
@@ -268,15 +222,21 @@
 
 	<!--Table-->
 	<table class="table table-striped table-responsive w-100 d-block d-md-table">
-		<thead class="thead-dark">
+		<thead class="thead-dark sticky-top">
+			<tr class="row" style="display:none;">
+				@(RowIndex = 0)
+			</tr>
 			<tr>
+				<th></th>
 				<th style="text-align:left" scope="col">
 					<button class="btn btn-success" type="button"
 							style="width:5em" @onclick="() => PersonButtonClick(Guid.Empty)">
+						<!--Empty guid signals new record-->
 						New
 					</button>
 				</th>
 				<th style="text-align:center" scope="col">ID</th>
+				<th style="text-align:center" scope="col">Company Name</th>
 				<th style="text-align:center" scope="col">Last Name</th>
 				<th style="text-align:center" scope="col">First Name</th>
 				<th style="text-align:center" scope="col">Title</th>
@@ -289,18 +249,24 @@
 		<tbody>
 			@foreach (Person person in FilteredList)
 			{
+				// Skips the rest of the statements and continues with the next iteration of the loop.
+				if (!IsVisible(Filter, person.SearchTerms)) continue;
 				<tr>
+					<td class="align-middle" style="width:1em">
+						@(++RowIndex)
+					</td>
 					<td>
-						<button class="btn btn-primary" type="button" @onclick="() => PersonButtonClick(person.Id)" //EditPersonButtonClick
+						<button class="btn btn-primary" type="button" @onclick="() => PersonButtonClick(person.Id)"
 								style="width:5em">
-							Edit
+							Edit <!--presence of person.Id signals an edit operation-->
 						</button>
 					</td>
 					<td style="width:12em">@person.Id.ToString()</td>
+					<td>@person.CompanyName</td>
 					<td>@person.LastName</td>
 					<td>@person.FirstName</td>
 					<td>@person.Title</td>
-					<td><a href="tel:@person.Phone">@person.Phone</a></td>
+					<td>@person.Phone</td>
 					<td><a href="mailto:@person.EmailAddress.ToString()">@person.EmailAddress</a></td>
 					<td style="text-align:center">@person.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</td>
 					<td style="text-align:center">
@@ -315,7 +281,7 @@
 	</table>
 	<!--Nav to top button-->
 	<div class="mt-4">
-		<a class="btn btn-sm btn-info" href="javascript: document.body.scrollIntoView(true);">Top</a>
+		<a class="btn btn-sm btn-info" href="javascript: document.body.scrollIntoView(true);"><i class="bi bi-arrow-up"></i>Back to Top</a>
 	</div>
 	<!--Help-->
 	<div class="offcanvas offcanvas-end @ShowHelp" tabindex="-1" id="offcanvasExample"
@@ -327,9 +293,12 @@
 		</div>
 		<div class="offcanvas-body">
 			<div>
-				<h5>Filtering</h5>
+				<h5>
+					Search
+				</h5>
 				<p>
-					This page demonstrates the ability to find someone quickly.  The search-type allows the user to find a record by a field value or values.
+					Entering a few characters into the search box will result in the list of people being filtered to records that contain the
+					phrase anywhere within the each.  The search is not case sensitive.  If you paste in a string, be careful you don't include a trailing space.
 				</p>
 				<h5>Limits to Editing</h5>
 				<p>
@@ -349,15 +318,19 @@
 					introduction of a new system.  Covid-19 has shown that
 					remote-working is a pragmatic option in a digital society.
 					As long as the system uses a consistent design and does not crowd
-					forms with buttons galore, forms like this make training enjoyable.
+					forms with buttons galore, intuitive forms like this minise time spent training.
 				</p>
 				<h5>Accuracy and Immediate Communication</h5>
 				<p>
 					Being able to correct or bring up-to-date a person's record at the
-					touch of a button means that staff can keep data in step with reality with little effort
+					touch of a button means that staff can effortlessly keep data in step with reality.
 				<p>
-					Making a telephone call by simply clicking a number or sending an
-					email by clicking an email address enhances a company's reputation for responsiveness.
+					If you have a digital telephone system it might be possible to design the telephone number as a hyperlink which will connect to that number.
+					(You may need a licence for this sort of functionality - speak to your telepone service provider).
+				</p>
+				<p>
+					Sending an email by clicking an email address enhances a company's reputation for responsiveness.
+					If you are using Outlook, a click with bring up an email with the email address inserted - try it!
 				</p>
 				<p>
 					It is possible to send bulk emails; if you send less than 25,000 a month. they cost nothing
@@ -374,7 +347,6 @@
 @code {
 	JsonBlobService jsonBlobService = new();
 	bool IsLoading = true;
-	bool ShowSearchParam = true;
 	bool ShowErrorModal = false;
 	string PersonModalDangerMessage = "";
 	string ErrorMessage = string.Empty;
@@ -383,112 +355,59 @@
 	bool ShowDeleteModal = false;
 	string SelectString = "Select...";
 	string ModalHeaderColour = "bg-success";
+	int RowIndex { get; set; }
 
-	DateTime? DateFrom = null;
-	DateTime? DateTo = null;
+	List<Person> PersonList = new();
+	List<Person> FilteredList = new();
 
-	private List<string> SearchTypeList = Globals.GetSearchTypeList();
+	string? Filter { get; set; } = string.Empty;
 
-	private List<Person> PersonList = new List<Person>();
-	private List<Person> FilteredList = new List<Person>();
+	string SearchParamError = string.Empty;
+	Person? SelectedPerson { get; set; }
+	string ModalTitleCaption = string.Empty;
 
-	// Start off showing a search for Last Name Begins
-	private string SearchType = Globals.LastNameStarts;
-	private string FilterParameter = "van"; //Demo start-up name fragment
-
-	private string SearchParamError = string.Empty;
-	private Person? SelectedPerson { get; set; }
-	private string ModalTitleCaption = string.Empty;
+	string ShowHelp { get; set; } = "";
 
 	protected override async Task OnInitializedAsync()
 	{
 		IsLoading = true;
 		string jsonFile = await Http.GetStringAsync("/api/GetJsonFile?fileName=People.json");
 		PersonList = JsonConvert.DeserializeObject<List<Person>>(jsonFile);
-		FilteredList = PersonList.FindAll(x => x.LastName.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
+		FilteredList = JsonConvert.DeserializeObject<List<Person>>(jsonFile);
+
 		IsLoading = false;
 	}
 
-	private void SearchTypeOnChange(ChangeEventArgs e)
+	private bool IsVisible(string SearchTerm, string SearchString)
 	{
-		ShowErrorModal = false; ErrorMessage = string.Empty;
-		SearchType = e.Value?.ToString() ?? "";
-		SearchParamError = string.Empty;
-		if (SearchType == Globals.DateModifiedFilter)
+		try
 		{
-			ShowSearchParam = false;
-			return;
+			//Shows rows that have filter text
+			if (string.IsNullOrEmpty(SearchTerm))
+			{
+				return true;
+			}
+			if (SearchString.ToLower().Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
 		}
-		else
+		catch (Exception ex)
 		{
-			ShowSearchParam = true;
+			Console.WriteLine("IsVisible - Exception: " + ex.Message);
 		}
-		if (!string.IsNullOrEmpty(FilterParameter))
-		{
-			DoFilter(SearchType, FilterParameter);
-		}
+		return false;
 	}
-	private void DateFilterClick(MouseEventArgs e)
-	{
-		SearchParamError = string.Empty;
-
-		if (!DateFrom.HasValue)
-		{
-			SearchParamError = "Please insert a Date-From";
-			return;
-		}
-		if (!DateTo.HasValue)
-		{
-			SearchParamError = "Please insert a Date-To";
-			return;
-		}
-		if (DateFrom.Value > DateTo.Value)
-		{
-			SearchParamError = "Date-From must be earlier or the same as Date-To";
-			return;
-		}
-		// Set to last minute of the day
-		DateTo = DateTo.Value.AddHours(23).AddMinutes(59);
-
-		FilteredList.Clear();
-		FilteredList = FilteredList.Where(x => x.ModifiedDate >= DateFrom && x.ModifiedDate <= DateTo).ToList();
-	}
-	private void ShowHelpSearchParamClick()
+	void ShowHelpSearchParamClick()
 	{
 		ShowErrorModal = false; ErrorMessage = string.Empty;
 		ShowHelpModal = true;
 	}
-	private void HideHelpModalClick()
+	void HideHelpModalClick()
 	{
 		ShowHelpModal = false;
 	}
-	private void SearchParamOnInput(ChangeEventArgs e)
-	{
-		if (e.Value != null)
-		{
-			if (string.IsNullOrEmpty(e.Value.ToString()))
-			{
-				FilterParameter = string.Empty;
-				FilteredList.Clear();
-				return;
-			}
-
-		}
-		if (Globals.StringCharsOK(e.Value?.ToString() ?? ""))
-		{
-			SearchParamError = string.Empty;
-			FilterParameter = e.Value?.ToString() ?? "";
-			DoFilter(SearchType, FilterParameter);
-			return;
-		}
-		else
-		{
-			FilteredList.Clear();
-			SearchParamError = "Search parameter can only have letters in the range A-Z, a-z, digits in the range 0-9, spaces or a dash('-') It cannot be more than 20 characters long.";
-			return;
-		}
-	}
-	private void PersonButtonClick(Guid id)  //Could be Edit or New Button
+	void PersonButtonClick(Guid id)  //Could be Edit or New Button
 	{
 		ShowPersonModal = false;
 		if (id == Guid.Empty) //This is a new record
@@ -503,7 +422,7 @@
 		{
 			ModalHeaderColour = "bg-primary";
 			ModalTitleCaption = "Edit Person";
-			Person? person = FilteredList.FirstOrDefault(p => p.Id == id);
+			Person? person = PersonList.FirstOrDefault(p => p.Id == id);
 			if (person == null)
 			{
 				SelectedPerson = new();
@@ -515,9 +434,9 @@
 		}
 		ShowPersonModal = true;
 	}
-	private void OnSubmitPerson(EditContext context)
+	void OnSubmitPerson(EditContext context)
 	{
-		ShowErrorModal = false; 
+		ShowErrorModal = false;
 		ErrorMessage = string.Empty;
 		bool formIsValid = context.Validate();
 		if (formIsValid)
@@ -539,30 +458,6 @@
 			SelectedPerson.MiddleName = string.Empty;
 		}
 
-		//https://www.timeanddate.com/time/zone/uk/london
-	// 	tzi
-	// (UTC + 00:00) Europe / London
-
-	// BaseUtcOffset: 00:00:00
-
-	// DaylightName: 'BST'
-
-	// DisplayName: '(UTC+00:00) Europe/London'
-
-	// HasIanaId: true
-
-	// Id: 'Europe/London'
-
-	// Local: (UTC + 00:00) Europe / London
-
-	// StandardName: 'GMT'
-
-	// SupportsDaylightSavingTime: true
-
-	// Utc: (UTC)UTC
-
-	//	TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
-
 		SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
 
 		if (SelectedPerson.Id == Guid.Empty)
@@ -573,31 +468,31 @@
 			if (PersonList.Count < 900) // 847 in the json file
 			{
 				PersonList.Insert(0, SelectedPerson);
-				PersonList = PersonList.OrderBy(x => x.LastName).ThenBy(x=>x.FirstName).ToList();
-				FilteredList.Insert(0, SelectedPerson);
+				PersonList = PersonList.OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToList();
+				PersonList.Insert(0, SelectedPerson);
 			}
 		}
 		else
 		{
-			int index = FilteredList.FindIndex(x => x.Id == SelectedPerson.Id);
+			int index = PersonList.FindIndex(x => x.Id == SelectedPerson.Id);
 			if (index == -1)
 			{
 				ErrorMessage = "Can't find person record with the ID: " + SelectedPerson.Id;
 				ShowErrorModal = true;
 				return;
 			}
-			FilteredList[index] = SelectedPerson;
+			PersonList[index] = SelectedPerson;
 		}
 		HidePersonModalClick();
 	}
-	private void HidePersonModalClick()
+	void HidePersonModalClick()
 	{
 		ShowPersonModal = false;
 		PersonModalDangerMessage = string.Empty;
 	}
-	private void DeleteClick(string id)
+	void DeleteClick(string id)
 	{
-		Person? person = FilteredList.Find(p => p.Id.ToString() == id);
+		Person? person = PersonList.Find(p => p.Id.ToString() == id);
 		if (person == null)
 		{
 			ErrorMessage = "Delete Click. Can't find person with ID: " + id;
@@ -610,9 +505,9 @@
 			ShowDeleteModal = true;
 		}
 	}
-	private void DeleteSelectedPerson(string id)
+	void DeleteSelectedPerson(string id)
 	{
-		Person? person = FilteredList.SingleOrDefault(r => r.Id.ToString() == id);
+		Person? person = PersonList.SingleOrDefault(r => r.Id.ToString() == id);
 		if (person == null)
 		{
 			ErrorMessage = "Delete Selected Person: Can't find selected person with ID: " + id;
@@ -621,47 +516,14 @@
 		}
 		else
 		{
-			FilteredList.Remove(person);
+			PersonList.Remove(person);
 		}
 		ShowDeleteModal = false;
 	}
-	private void HideDeleteModalClick()
+	void HideDeleteModalClick()
 	{
 		ShowDeleteModal = false;
 	}
-	private void DoFilter(string searchType, string FilterParameter)
-	{
-		FilteredList.Clear();
-		if (FilterParameter.Length == 0)
-		{
-			return;
-		}
-		switch (searchType)
-		{
-			case Globals.LastNameStarts:
-				FilteredList = PersonList.Where(x => x.LastName.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
-				break;
-			case Globals.LastNameContains:
-				FilteredList = PersonList.Where(x => x.LastName.ToLower().Contains(FilterParameter.ToLower())).ToList();
-				break;
-			case Globals.FirstNameStarts:
-				FilteredList = PersonList.Where(x => x.FirstName.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
-				break;
-			case Globals.FirstNameContains:
-				FilteredList = PersonList.Where(x => x.FirstName.ToLower().Contains(FilterParameter.ToLower())).ToList();
-				break;
-			case Globals.IDBegins:
-				FilteredList = PersonList.Where(x => x.Id.ToString().StartsWith(FilterParameter)).ToList();
-				break;
-			case Globals.EmailAddressStarts:
-				FilteredList = PersonList.Where(x => x.EmailAddress.ToLower().StartsWith(FilterParameter.ToLower())).ToList();
-				break;
-			case Globals.PhoneContains:
-				FilteredList = PersonList.Where(x => x.Phone.ToLower().Contains(FilterParameter.ToLower())).ToList();
-				break;
-		}
-	}
-	string ShowHelp { get; set; } = "";
 	void HelpClick()
 	{
 		ShowHelp = "show";
@@ -674,16 +536,38 @@
 			ShowHelp = "";
 		}
 	}
-
-	DateTime GetUKDateTimeTest()
+	async Task Search(string searchTerm)
 	{
-		// https://msdn.microsoft.com/en-us/library/bb397769(v=vs.110).aspx
-		// http://stackoverflow.com/questions/5601160/custom-date-time-format
+		if (string.IsNullOrEmpty(searchTerm))
+		{
+			FilteredList.Clear();
+			FilteredList = PersonList.ToList();
+		}
+		else
+		{
+			FilteredList = PersonList.FindAll(x => x.SearchTerms.ToLower().Contains(searchTerm.ToLower())).ToList();			
+		}
+	}
 
-		TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
-		DateTime UKDateTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, timeZoneInfo);
+	public async Task ValueChanged(string AmendedFilter)
+	{
+		Filter = AmendedFilter;
+	}
+	public async Task SetFilter()
+	{
+		Filter = string.Empty;
+		ShowHelpModal = true;
+	}
+	void ClearFilterClick()
+	{
+		Filter = string.Empty;
+		FilteredList.Clear();
+		FilteredList = PersonList.ToList();
+	}
 
-		return UKDateTime;
+	void InfoClick()
+	{
+		ShowHelpModal = true;
 	}
 }
 
