@@ -1,0 +1,176 @@
+﻿@page "/test"
+@inject HttpClient Http
+@inject NavigationManager NavMan
+
+<div class="container-fluid p-0 m-0">
+	<div class="row">
+		<div class="col-sm-2">
+			<button class="btn btn-primary" style="width:5em" @onclick="ErrorOnClick">Error</button>
+		</div>
+		<div class="col-sm-2">
+			<button class="btn btn-primary" style="width:5em" @onclick="OKOnClick">OK?</button>
+		</div>
+
+		<div class="col-sm-2">
+			<button class="btn btn-danger" style="width:5em" @onclick="DeleteOnClick">Delete</button>
+		</div>
+		<div class="col-sm-1">
+			<a href="javascript: void(0);" @onclick="NoteClick">
+				Note
+			</a>
+			</div>
+		<div class="col-sm-1">
+			<button class="btn btn-primary" style="width:5em" @onclick="EditOnClick">Edit</button>
+		</div>
+		@if (ErrorDLogVisible)
+		{
+			<ModalDialogError Message=@ErrorDlogMessage
+							  DlogSize=@ErrorDLogSize
+							  OnClose=@ErrorModalClose>
+			</ModalDialogError>
+		}
+		@if (OKDLogVisible)
+		{
+			<ModalDialogOK Message=@OKDlogMessage
+						   Caption="@OKDlogCaption"
+						   DlogSize=@OKDLogSize
+						   OnClose=@OKDlogClose>
+			</ModalDialogOK>
+		}
+		@if (DeleteDLogVisible)
+		{
+			<ModalDialogDelete Message=@DeleteDlogMessage
+							   TargetId=@DeleteID
+							   DLogSize=@ErrorDLogSize
+							   OnDelete=@DeleteResponse>
+			</ModalDialogDelete>
+		}
+	</div>
+	<!--Edit modal @ShowEdit controls visibility-->
+	<div class="offcanvas offcanvas-start @ShowEdit" tabindex="-1" id="offcanvasEdit"
+		 aria-labelledby="offcanvasEditLabel"
+		 aria-modal="true" role="dialog" style="visibility: visible;background-color:gainsboro">
+		<div class="offcanvas-header" style="background-color:azure">
+			<h4 class="offcanvas-title" id="offcanvasEditLabel">Edit</h4>
+			<button class="btn btn-primary" style="width:5em" @onclick="SaveClick">Save</button>
+			<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close" @onclick=HideEditClick></button>
+		</div>
+		<div class="offcanvas-body">
+
+		</div>
+	</div>
+
+
+
+</div>
+@code {
+
+	List<Person> PersonList = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+
+			//string jsonFile = await Http.GetStringAsync("/api/GetJsonFile?fileName=Persons.json");
+			//PersonList = JsonConvert.DeserializeObject<List<Person>>(jsonFile) ?? [];
+		}
+		catch (Exception ex)
+		{
+			ErrorDlogMessage = "OnInitializedAsync - Exception: " + ex.Message;
+			ErrorDLogVisible = true;
+			return;
+		}
+	}
+	#region  OKDialogRegion
+	string? OKDlogCaption { get; set; }
+	string OKDlogMessage = string.Empty;
+	string OKDLogSize = string.Empty;
+	public bool OKDLogVisible { get; set; } = false;
+	void OKOnClick()
+	{
+		OKDlogCaption = "OK";
+		OKDlogMessage = "Vaughan Gething is set to be Wales' next first minister after narrowly winning the Welsh Labour leadership election with 51.7% of the vote. Mr Gething, who will become the first black person to lead Wales, beat his rival Jeremy Miles, who took 48.3%.";
+		OKDLogSize = "sm";
+		OKDLogVisible = true;
+	}
+	void OKDlogClose()
+	{
+		OKDLogVisible = false;
+	}
+	#endregion
+
+	#region  ErrorDialogRegion
+	bool ErrorDLogVisible = false;
+	string ErrorDlogMessage = string.Empty;
+	string ErrorDLogSize = string.Empty;
+
+	void ErrorOnClick()
+	{
+		ErrorDlogMessage = "Vaughan Gething is set to be Wales' next first minister after narrowly winning the Welsh Labour leadership election with 51.7% of the vote. Mr Gething, who will become the first black person to lead Wales, beat his rival Jeremy Miles, who took 48.3%.";
+		ErrorDLogSize = "sm";
+		ErrorDLogVisible = true;
+	}
+	void ErrorModalClose()
+	{
+		ErrorDLogVisible = false;
+	}
+	#endregion
+
+	#region  DeleteDialogRegion
+
+	//ErrorDLogVisible
+
+	bool DeleteDLogVisible = false;
+	string DeleteDlogCaption = string.Empty;
+	string DeleteDlogMessage = string.Empty;
+	string DeleteDLogSize = string.Empty;
+	string DeleteID = string.Empty;
+	void DeleteOnClick()
+	{
+		DeleteDlogCaption = "Delete?";
+		DeleteDlogMessage = "Do you want to permanently delete the record for John DOA";
+		ErrorDLogSize = "sm";
+		DeleteID = Guid.NewGuid().ToString();
+		DeleteDLogVisible = true;
+	}
+	void DeleteResponse(string Id)
+	{
+		DeleteDLogVisible = false;
+		if (string.IsNullOrEmpty(Id))
+		{
+			return;
+		}
+		// Will be a guid in string format
+	}
+	#endregion
+
+
+	private void NoteClick(MouseEventArgs e)
+	{
+		OKDlogCaption = "Note";
+		OKDlogMessage = "leadership election with 51.7% of the vote. Mr Gething, who will become the first black person to lead Wales, beat his rival Jeremy Miles, who took 48.3%.";
+		OKDLogSize = "sm";
+		OKDLogVisible = true;
+	}
+
+	#region  EditRegion
+	string ShowEdit { get; set; } = "";
+	void EditOnClick()
+	{
+		ShowEdit = "show";
+	}
+	void HideEditClick()
+	{
+		// Is the help panel showing?
+		if (ShowEdit == "show")
+		{
+			ShowEdit = "";
+		}
+	}
+	void SaveClick()
+	{
+		HideEditClick();
+	}
+	#endregion
+}

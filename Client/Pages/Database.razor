@@ -1,17 +1,11 @@
 ﻿@page "/database"
-@using BlazorApp.Client.Data
-@using BlazorApp.Client.Models
-@using BlazorApp.Client.Pages.Components
-@using BlazorApp.Client.Services
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using Newtonsoft.Json
 @inject HttpClient Http
 @inject NavigationManager NavMan
 
 <div class="container-fluid p-0 m-0">
 	<div class="row w-100 d-inline-flex mb-2" style="background-color:navy">
 		<div class="col-sm-11 d-flex justify-content-center" style="padding-top:0.6em">
-			<h3 style="color:white">Database Demo (Records:&nbsp;@RowIndex.ToString()) &nbsp;</h3>
+			<h3 style="color:white">Database Demo - All data is fictitious (Records:&nbsp;@RowIndex.ToString()) &nbsp;</h3>
 		</div>
 		<div class="col-sm-1 d-flex justify-content-end" style="padding-top:0.7em">
 			<button class="btn-link" style="background-color:transparent;border-color:transparent"
@@ -32,7 +26,6 @@
 			<SearchBox SearchQueryChanged="ValueChanged" SearchQuery=@Filter />
 		</div>
 	</div>
-
 	@if (SearchParamError.Length > 0)
 	{
 		<div class="alert alert-danger alert-dismissible mt-2" role="alert" style="height:auto;color:black;font-weight:700;">
@@ -40,20 +33,45 @@
 			&nbsp;@SearchParamError.ToString()
 		</div>
 	}
-	@if (ShowPersonModal)
+	@if (ErrorDLogVisible)
+	{
+		<ModalDialogError Message=@ErrorDlogMessage
+						  DlogSize=@ErrorDLogSize
+						  OnClose=@ErrorModalClose>
+		</ModalDialogError>
+	}
+	@if (OKDLogVisible)
+	{
+		<ModalDialogOK Message=@OKDlogMessage
+					   DlogSize=@OKDLogSize
+					   OnClose=@OKDlogClose>
+		</ModalDialogOK>
+	}
+	@if (DeleteDLogVisible)
+	{
+		<ModalDialogDelete Message=@DeleteDlogMessage
+						   TargetId=@DeleteID
+						   DLogSize=@ErrorDLogSize
+						   OnDelete=@DeleteResponse>
+		</ModalDialogDelete>
+	}
+
+	@if (ShowOffCanvasEdit)
 	{
 		<div id="personModal" class="modal" tabindex="-1" style="display:block" role="dialog">
-			<div class="modal-dialog  modal-sm">
+			<div class="modal-dialog modal-sm">
 				<div class="modal-content">
 					<EditForm id="personForm" Model="@SelectedPerson" OnSubmit="@OnSubmitPerson">
 						<DataAnnotationsValidator />
-						<div class="modal-header @ModalHeaderColour text-white">
-							<div class="row">
-								<h3 class="modal-title">
-									@ModalTitleCaption
-								</h3>
-							</div>
+
+						<div class="modal-header" style="background-color:azure;height:1.5cm">
+							<h3 class="modal-title">@ModalTitleCaption</h3>
+							<button class="btn p-0 shadow-none border-0" type="button" aria-label="Close"
+									@onclick="PersonModalCloseClick">
+								<span aria-hidden="true"><h2>&times;</h2></span>
+							</button>
 						</div>
+
 						<div class="modal-body" style="background-color:gainsboro">
 							@if (PersonModalDangerMessage.Length > 0)
 							{
@@ -61,43 +79,58 @@
 									@PersonModalDangerMessage;
 								</div>
 							}
-							<label class="control-label mt-2">Title (Click to select)</label>
-							<InputSelect class="form-select" @bind-Value="SelectedPerson.Title">
-								<option value="">@SelectString</option>
+							<label class="control-label mt-2" for="selectedPersonTitle">Title (Mr, Mrs, Ms or Not Stated)</label>
+							<InputSelect class="form-select" id="selectedPersonTitle" @bind-Value="SelectedPerson.Title">
+								<option value="">@Globals.SelectDotDotDot</option>
 								<option value="Mr">Mr</option>
 								<option value="Mrs">Mrs</option>
 								<option value="Ms">Ms</option>
-								<option value="NotStated">Not Stated</option>
+								<option value="@Globals.NotStated">@Globals.NotStated</option>
 							</InputSelect>
 							<ValidationMessage For="@(() => SelectedPerson.Title)" />
 
-							<label class="control-label mt-2">Last Name</label>
-							<InputText id="LastName" class="form-control" @bind-Value="SelectedPerson.LastName" />
+							<label class="control-label mt-2" for="lastName">Last Name</label>
+							<InputText id="lastName" class="form-control" @bind-Value="SelectedPerson.LastName" />
 							<ValidationMessage For="@(() => SelectedPerson.LastName)" />
 
-							<label class="control-label mt-2">Middle Name</label>
-							<InputText id="MiddleName" class="form-control" @bind-Value="SelectedPerson.MiddleName" />
+							<label class="control-label mt-2" for="middleName">Middle Name (Optional)</label>
+							<InputText id="middleName" class="form-control" @bind-Value="SelectedPerson.MiddleName" />
 
-							<label class="control-label mt-2">First Name</label>
-							<InputText id="FirstName" class="form-control" @bind-Value="SelectedPerson.FirstName" />
+							<label class="control-label mt-2" for="firstName">First Name</label>
+							<InputText id="firstName" class="form-control" @bind-Value="SelectedPerson.FirstName" />
 							<ValidationMessage For="@(() => SelectedPerson.FirstName)" />
 
-							<label class="control-label mt-2">Company Name</label>
-							<InputText id="CompanyName" class="form-control" @bind-Value="SelectedPerson.CompanyName" />
+							<label class="control-label mt-2" for="gender">Gender (M, F or Not Stated)</label>
+							<InputSelect class="form-select" id="gender" @bind-Value="SelectedPerson.Gender">
+								<option value="">@Globals.SelectDotDotDot</option>
+								<option value="Male">Male</option>
+								<option value="Female">Female</option>
+								<option value=@Globals.NotStated>@Globals.NotStated</option>
+							</InputSelect>
+							<ValidationMessage For="@(() => SelectedPerson.Gender)" />
+
+							<label class="control-label mt-2" for="companyName">Company Name</label>
+							<InputText id="companyName" class="form-control" @bind-Value="SelectedPerson.CompanyName" />
 							<ValidationMessage For="@(() => SelectedPerson.CompanyName)" />
 
-							<label class="control-label mt-2">Phone</label>
-							<InputText id="Phone" class="form-control" @bind-Value="SelectedPerson.Phone" />
+							<label class="control-label mt-2" for="phone">Phone</label>
+							<InputText id="phone" class="form-control" @bind-Value="SelectedPerson.Phone" />
 							<ValidationMessage For="@(() => SelectedPerson.Phone)" />
 
-							<label class="control-label mt-2">Email Address</label>
-							<InputText id="EmailAddress" class="form-control" @bind-Value="SelectedPerson.EmailAddress" />
+							<label class="control-label mt-2" for="emailAddress">Email Address</label>
+							<InputText id="emailAddress" class="form-control" @bind-Value="SelectedPerson.EmailAddress" />
 							<ValidationMessage For="@(() => SelectedPerson.EmailAddress)" />
 
-							<label class="control-label mt-2">Modified Date</label>
-							<label class="form-control" readonly>@SelectedPerson.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</label>
-							<label class="control-label mt-2">ID</label>
-							<label class="form-control" style="height:auto" readonly>@SelectedPerson.Id.ToString()</label>
+							@if (SelectedPerson.Id == Guid.Empty)
+							{
+									<p>After clicking the Save button, the new person will appear at the top of the list</p>
+							}
+							else
+							{
+								<br />
+								<p> Modified Date:<br />@SelectedPerson.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</p>
+								<p> ID:<br />@SelectedPerson.Id.ToString()</p>
+							}
 
 						</div>
 						<div class="modal-footer" style="background-color:silver">
@@ -106,7 +139,6 @@
 									Save
 								</button>
 							</div>
-
 							<div class="col d-flex justify-content-end">
 								<button type="button" class="btn alert-primary"
 										@onclick="HidePersonModalClick">
@@ -135,10 +167,10 @@
 							By placing a <i class="bi bi-info-circle"></i> button close to the search box, the user is given a context cue that help is offered when searching
 						</p>
 						<p>
-							The main help will be found by clicking the <i class="bi bi-info-circle"></i> button in the blue band - top right. 
+							The main help will be found by clicking the <i class="bi bi-info-circle"></i> button in the blue band - top right.
 						</p>
 						<p>
-							This help-variation is an option that could be used where important guidance needs to be reinforced.
+							This help-variation is an option that could be used where important guidance needs to be repeated.
 						</p>
 					</div>
 					<div class="modal-footer" style="background-color:gainsboro">
@@ -151,71 +183,9 @@
 			</div>
 		</div>
 	}
-	@if (ShowErrorModal)
-	{
-		<div class="modal" tabindex="-1" style="display:block;" role="dialog">
-			<div class="modal-dialog small">
-				<div class="modal-content">
-					<div class="modal-header" style="background-color:firebrick;color:white">
-						<h3 class="modal-title">
-							Error
-						</h3>
-					</div>
-					<p>
-						@ErrorMessage.ToString()
-					</p>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-primary"
-								@onclick="HideHelpModalClick">
-							Close
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	}
-	@if (ShowDeleteModal)
-	{
-		<div class="modal" tabindex="-1" style="display:block;" role="dialog">
-			<div class="modal-dialog modal-sm">
-				<div class="modal-content">
-					<div class="modal-header" style="background-color:red;color:white">
-						<h3 class="modal-title">
-							Delete
-						</h3>
-					</div>
-					<div class="modal-body">
-						<h4>Do you want to permanently delete the record for...</h4> <br />
-						<div class="form-row">
-							<h4>@SelectedPerson.FirstName&nbsp;@SelectedPerson.LastName?</h4>
-						</div>
-						<br />
-						<div class="form-row">
-							<h5>ID:&nbsp;@SelectedPerson.Id</h5>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<label>Note: this is a demo deletion.  Next time the form opens, all the demo data will re-appear</label>
-						<div class="col d-flex justify-content-start">
-							<button type="button" class="btn btn-danger ml-2" style="width:5em"
-									@onclick="() => DeleteSelectedPerson(SelectedPerson.Id.ToString())">
-								Yes
-							</button>
-						</div>
-						<div class="col d-flex justify-content-end">
-							<button type="button" class="btn btn-primary" style="width:5em"
-									@onclick="HideDeleteModalClick">
-								Cancel
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	}
 	@if (IsLoading)
 	{
-		<div style="left:50%; top:50%; margin-left-4em;display: block; position: fixed;z-index: 1031">
+		<div style="left:50%; top:50%; margin-left-4em; display: block; position: fixed;z-index: 1031">
 			<img src=@("/ajax-loader.gif") />
 		</div>
 	}
@@ -230,18 +200,19 @@
 				<th></th>
 				<th style="text-align:left" scope="col">
 					<button class="btn btn-success" type="button"
-							style="width:5em" @onclick="() => PersonButtonClick(Guid.Empty)">
+							data-toggle="tooltip" data-placement="top" title="After saving the new record, it will appear at the top of this list"
+							style="width:5em" @onclick="() => EditOrNewClick(Guid.Empty)">
 						<!--Empty guid signals new record-->
 						New
 					</button>
 				</th>
 				<th style="text-align:center" scope="col">ID</th>
 				<th style="text-align:center" scope="col">Company Name</th>
-				<th style="text-align:center" scope="col">Last Name</th>
-				<th style="text-align:center" scope="col">First Name</th>
+				<th style="text-align:center" scope="col">Name, Last, First and Middle</th>
+				<th style="text-align:center" scope="col">Gender</th>
 				<th style="text-align:center" scope="col">Title</th>
-				<th style="text-align:center" scope="col">Phone (fictitious)</th>
-				<th style="text-align:center" scope="col">Email (fictitious)</th>
+				<th style="text-align:center" scope="col">Phone</th>
+				<th style="text-align:center" scope="col">Email</th>
 				<th style="text-align:center" scope="col">Date Modified</th>
 				<th></th>
 			</tr>
@@ -256,19 +227,19 @@
 						@(++RowIndex)
 					</td>
 					<td>
-						<button class="btn btn-primary" type="button" @onclick="() => PersonButtonClick(person.Id)"
+						<button class="btn btn-primary" type="button" @onclick="() => EditOrNewClick(person.Id)"
 								style="width:5em">
 							Edit <!--presence of person.Id signals an edit operation-->
 						</button>
 					</td>
-					<td style="width:12em">@person.Id.ToString()</td>
+					<td>@person.Id.ToString()</td>
 					<td>@person.CompanyName</td>
-					<td>@person.LastName</td>
-					<td>@person.FirstName</td>
-					<td>@person.Title</td>
+					<td><strong>@person.FullName()</strong></td>
+					<td style="text-align:center">@person.Gender</td>
+					<td style="text-align:center">@person.Title</td>
 					<td>@person.Phone</td>
 					<td><a href="mailto:@person.EmailAddress.ToString()">@person.EmailAddress</a></td>
-					<td style="text-align:center">@person.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</td>
+					<td style="text-align:center">@person.ModifiedDate.ToString("dd MMM yyyy")</td>
 					<td style="text-align:center">
 						<button class="btn btn-danger" type="button" @onclick="() => DeleteClick(person.Id.ToString())"
 								style="width:5em">
@@ -282,6 +253,88 @@
 	<!--Nav to top button-->
 	<div class="mt-4">
 		<a class="btn btn-sm btn-info" href="javascript: document.body.scrollIntoView(true);"><i class="bi bi-arrow-up"></i>Back to Top</a>
+	</div>
+	<!--Edit Person modal @ShowEdit controls visibility-->
+	<div class="offcanvas offcanvas-start @ShowEdit" tabindex="-1" id="offcanvasEdit"
+		 aria-labelledby="offcanvasEditLabel"
+		 aria-modal="true" role="dialog" style="visibility: visible;background-color:gainsboro">
+		<div class="offcanvas-body">
+			<EditForm id="personForm" Model="@SelectedPerson" OnSubmit="@OnSubmitPerson">
+				<DataAnnotationsValidator />
+
+				<div class="modal-header p-2" style="background-color:azure;height:1.5cm">
+					<h3 class="modal-title">@ModalTitleCaption</h3>
+					<button class="btn p-0 shadow-none border-0" type="button" aria-label="Close"
+							@onclick="HideEditClick">
+						<span aria-hidden="true"><h2>&times;</h2></span>
+					</button>
+				</div>
+
+				<div class="modal-body" style="background-color:gainsboro">
+					@if (PersonModalDangerMessage.Length > 0)
+					{
+						<div class="alert alert-danger" role="alert">
+							@PersonModalDangerMessage;
+						</div>
+					}
+					<label class="control-label mt-2" for="selectedPersonTitle">Title (Mr, Mrs, Ms or Not Stated)</label>
+					<InputSelect class="form-select" id="selectedPersonTitle" @bind-Value="SelectedPerson.Title">
+						<option value="">@Globals.SelectDotDotDot</option>
+						<option value="Mr">Mr</option>
+						<option value="Mrs">Mrs</option>
+						<option value="Ms">Ms</option>
+						<option value="@Globals.NotStated">@Globals.NotStated</option>
+					</InputSelect>
+					<ValidationMessage For="@(() => SelectedPerson.Title)" />
+
+					<label class="control-label mt-2" for="lastName">Last Name</label>
+					<InputText id="lastName" class="form-control" @bind-Value="SelectedPerson.LastName" />
+					<ValidationMessage For="@(() => SelectedPerson.LastName)" />
+
+					<label class="control-label mt-2" for="middleName">Middle Name (Optional)</label>
+					<InputText id="middleName" class="form-control" @bind-Value="SelectedPerson.MiddleName" />
+
+					<label class="control-label mt-2" for="firstName">First Name</label>
+					<InputText id="firstName" class="form-control" @bind-Value="SelectedPerson.FirstName" />
+					<ValidationMessage For="@(() => SelectedPerson.FirstName)" />
+
+					<label class="control-label mt-2" for="gender">Gender (M, F or Not Stated)</label>
+					<InputSelect class="form-select" id="gender" @bind-Value="SelectedPerson.Gender">
+						<option value="">@Globals.SelectDotDotDot</option>
+						<option value="Male">Male</option>
+						<option value="Female">Female</option>
+						<option value=@Globals.NotStated>@Globals.NotStated</option>
+					</InputSelect>
+					<ValidationMessage For="@(() => SelectedPerson.Gender)" />
+
+					<label class="control-label mt-2" for="companyName">Company Name</label>
+					<InputText id="companyName" class="form-control" @bind-Value="SelectedPerson.CompanyName" />
+					<ValidationMessage For="@(() => SelectedPerson.CompanyName)" />
+
+					<label class="control-label mt-2" for="phone">Phone</label>
+					<InputText id="phone" class="form-control" @bind-Value="SelectedPerson.Phone" />
+					<ValidationMessage For="@(() => SelectedPerson.Phone)" />
+
+					<label class="control-label mt-2" for="emailAddress">Email Address</label>
+					<InputText id="emailAddress" class="form-control" @bind-Value="SelectedPerson.EmailAddress" />
+					<ValidationMessage For="@(() => SelectedPerson.EmailAddress)" />
+
+					@if (SelectedPerson.Id == Guid.Empty)
+					{
+						<label class="control-label mt-2">After clicking the Save button, the new person will appear at the top of the list</label>
+					}
+					else
+					{
+						<br />
+						<p> Modified Date:<br />@SelectedPerson.ModifiedDate.ToString("HH:mm ddd dd MMM yyyy")</p>
+						<p> ID:<br />@SelectedPerson.Id.ToString()</p>
+					}
+				</div>
+				<div class="row p-2" style="background-color:azure">
+					<button type="submit" class="btn btn-primary" style="width:5em">Save</button>
+				</div>
+			</EditForm>
+		</div>
 	</div>
 	<!--Help-->
 	<div class="offcanvas offcanvas-end @ShowHelp" tabindex="-1" id="offcanvasExample"
@@ -347,35 +400,43 @@
 @code {
 	JsonBlobService jsonBlobService = new();
 	bool IsLoading = true;
-	bool ShowErrorModal = false;
+
 	string PersonModalDangerMessage = "";
-	string ErrorMessage = string.Empty;
-	bool ShowPersonModal { get; set; } = false;
+	bool ShowOffCanvasEdit { get; set; } = false;
+	string? ModalTitleCaption { get; set; }
+
 	bool ShowHelpModal = false;
-	bool ShowDeleteModal = false;
-	string SelectString = "Select...";
-	string ModalHeaderColour = "bg-success";
+
 	int RowIndex { get; set; }
 
-	List<Person> PersonList = new();
+	List<Person> PersonList = new(); // All the records.  This list is never deleted from
 	List<Person> FilteredList = new();
 
 	string? Filter { get; set; } = string.Empty;
 
 	string SearchParamError = string.Empty;
-	Person? SelectedPerson { get; set; }
-	string ModalTitleCaption = string.Empty;
+	Person SelectedPerson { get; set; } = new();
 
 	string ShowHelp { get; set; } = "";
 
 	protected override async Task OnInitializedAsync()
 	{
-		IsLoading = true;
-		string jsonFile = await Http.GetStringAsync("/api/GetJsonFile?fileName=People.json");
-		PersonList = JsonConvert.DeserializeObject<List<Person>>(jsonFile);
-		FilteredList = JsonConvert.DeserializeObject<List<Person>>(jsonFile);
-
-		IsLoading = false;
+		try
+		{
+			IsLoading = true;
+			string jsonFile = await Http.GetStringAsync("/api/GetJsonFile?fileName=Persons.json");
+			PersonList = JsonConvert.DeserializeObject<List<Person>>(jsonFile) ?? [];
+			FilteredList = JsonConvert.DeserializeObject<List<Person>>(jsonFile) ?? [];
+			IsLoading = false;
+		}
+		catch (Exception ex)
+		{
+			IsLoading = false;
+			ErrorDlogMessage = "OnInitializedAsync - Exception: " + ex.Message;
+			ErrorDLogSize = Globals.DLogSizeSmall;
+			ErrorDLogVisible = true;
+			return;
+		}
 	}
 
 	private bool IsVisible(string SearchTerm, string SearchString)
@@ -398,57 +459,58 @@
 		}
 		return false;
 	}
-	void ShowHelpSearchParamClick()
+	void EditOrNewClick()
 	{
-		ShowErrorModal = false; ErrorMessage = string.Empty;
+		ErrorDLogVisible = false;
 		ShowHelpModal = true;
 	}
 	void HideHelpModalClick()
 	{
 		ShowHelpModal = false;
 	}
-	void PersonButtonClick(Guid id)  //Could be Edit or New Button
+	void EditOrNewClick(Guid id)  //Could be Edit or New Button
 	{
-		ShowPersonModal = false;
+
+		//ShowOffCanvasEdit = false;
 		if (id == Guid.Empty) //This is a new record
 		{
 			SelectedPerson = new Person();
 			SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
 			SelectedPerson.Id = Guid.Empty;  // Signals that this record must be saved
-			ModalHeaderColour = "bg-success";
 			ModalTitleCaption = "New Person";
 		}
 		else
 		{
-			ModalHeaderColour = "bg-primary";
 			ModalTitleCaption = "Edit Person";
 			Person? person = PersonList.FirstOrDefault(p => p.Id == id);
 			if (person == null)
 			{
-				SelectedPerson = new();
+				ErrorDlogMessage = "Can't find person record with the ID: " + id.ToString() + " in the list";
+				ErrorDLogSize = Globals.DLogSizeSmall;
+				ErrorDLogVisible = true;
+				return;
 			}
-			else
-			{
-				SelectedPerson = person;
-			}
+			SelectedPerson = person;
 		}
-		ShowPersonModal = true;
+		//ShowOffCanvasEdit = true;
+		ShowEdit = "show";
+
 	}
 	void OnSubmitPerson(EditContext context)
 	{
-		ShowErrorModal = false;
-		ErrorMessage = string.Empty;
+		ErrorDLogVisible = false;
+		ErrorDlogMessage = string.Empty;
 		bool formIsValid = context.Validate();
 		if (formIsValid)
 		{
-			PersonModalDangerMessage = string.Empty;
+			PersonModalDangerMessage = string.Empty; // Message is triggered by having length > 0
 		}
 		else
 		{
 			PersonModalDangerMessage = "There are input errors, please check the form";
 			return;
 		}
-		if (SelectedPerson.Title == SelectString)
+		if (SelectedPerson.Title == Globals.SelectDotDotDot)
 		{
 			PersonModalDangerMessage = "Please select a title";
 			return;
@@ -458,71 +520,76 @@
 			SelectedPerson.MiddleName = string.Empty;
 		}
 
-		SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
-
-		if (SelectedPerson.Id == Guid.Empty)
+		if (SelectedPerson.Id == Guid.Empty)// This is a new record
 		{
-			// This is a new record
 			SelectedPerson.Id = Guid.NewGuid();
 			// Prevent malign attacks
-			if (PersonList.Count < 900) // 847 in the json file
+			if (FilteredList.Count < 1550) // 1500 in the json file, allow user to add 50 max
 			{
-				PersonList.Insert(0, SelectedPerson);
-				PersonList = PersonList.OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToList();
-				PersonList.Insert(0, SelectedPerson);
+				SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
+				SelectedPerson.SearchTerms = SelectedPerson.UpdateSearchTerms();
+				FilteredList.Insert(0, SelectedPerson);
+				HidePersonModalClick();
 			}
+			return;
 		}
-		else
+		// Find the record and update the search terms
+		int index = FilteredList.FindIndex(x => x.Id == SelectedPerson.Id);
+		if (index == -1)
 		{
-			int index = PersonList.FindIndex(x => x.Id == SelectedPerson.Id);
-			if (index == -1)
-			{
-				ErrorMessage = "Can't find person record with the ID: " + SelectedPerson.Id;
-				ShowErrorModal = true;
-				return;
-			}
-			PersonList[index] = SelectedPerson;
+			ErrorDlogMessage = "Can't find person record with the ID: " + SelectedPerson.Id + " in the filtered list";
+			ErrorDLogSize = Globals.DLogSizeSmall;
+			ErrorDLogVisible = true;
+			return;
 		}
-		HidePersonModalClick();
+		SelectedPerson.ModifiedDate = Globals.GetUKDateTime();
+		SelectedPerson.SearchTerms = SelectedPerson.UpdateSearchTerms();
+		FilteredList[index] = SelectedPerson;
+		ShowEdit = "";
+		//HidePersonModalClick();
 	}
 	void HidePersonModalClick()
 	{
-		ShowPersonModal = false;
+		ShowOffCanvasEdit = false;
 		PersonModalDangerMessage = string.Empty;
 	}
 	void DeleteClick(string id)
 	{
-		Person? person = PersonList.Find(p => p.Id.ToString() == id);
+		Person? person = FilteredList.Find(p => p.Id.ToString() == id);
 		if (person == null)
 		{
-			ErrorMessage = "Delete Click. Can't find person with ID: " + id;
-			ShowErrorModal = true;
+			ErrorDlogMessage = "Delete Clicked. Can't find person with ID: " + id + " in the filtered list";
+			ErrorDLogSize = Globals.DLogSizeSmall;
+			ErrorDLogVisible = true;
 			return;
 		}
 		else
 		{
 			SelectedPerson = person;
-			ShowDeleteModal = true;
+			DeleteDlogCaption = "Caption";
+			DeleteDlogMessage = "Do you want to permanently delete the record for " + person.FullName() + "?";
+			DeleteDLogSize = Globals.DLogSizeSmall;
+			DeleteID = person.Id.ToString();
+			DeleteDLogVisible = true;
 		}
 	}
 	void DeleteSelectedPerson(string id)
 	{
-		Person? person = PersonList.SingleOrDefault(r => r.Id.ToString() == id);
+		Person? person = FilteredList.SingleOrDefault(r => r.Id.ToString() == id);
 		if (person == null)
 		{
-			ErrorMessage = "Delete Selected Person: Can't find selected person with ID: " + id;
-			ShowErrorModal = true;
+			DeleteDLogVisible = false;
+			ErrorDlogMessage = "Delete Selected Person: Can't find selected person with ID: " + id;
+			ErrorDLogSize = Globals.DLogSizeSmall;
+			ErrorDLogVisible = true;
 			return;
 		}
 		else
 		{
-			PersonList.Remove(person);
+			FilteredList.Remove(person);
+			StateHasChanged();
 		}
-		ShowDeleteModal = false;
-	}
-	void HideDeleteModalClick()
-	{
-		ShowDeleteModal = false;
+		DeleteDLogVisible = false;
 	}
 	void HelpClick()
 	{
@@ -545,7 +612,7 @@
 		}
 		else
 		{
-			FilteredList = PersonList.FindAll(x => x.SearchTerms.ToLower().Contains(searchTerm.ToLower())).ToList();			
+			FilteredList = PersonList.FindAll(x => x.SearchTerms.ToLower().Contains(searchTerm.ToLower())).ToList();
 		}
 	}
 
@@ -569,5 +636,101 @@
 	{
 		ShowHelpModal = true;
 	}
+	void PersonModalCloseClick()
+	{
+		ShowOffCanvasEdit = false;
+	}
+
+	#region  OKDialogRegion
+	string? OKDlogCaption { get; set; }
+	string OKDlogMessage = string.Empty;
+	string OKDLogSize = string.Empty;
+	public bool OKDLogVisible { get; set; } = false;
+	void OKOnClick()
+	{
+		OKDlogCaption = "OK";
+		OKDlogMessage = "Vaughan Gething is set to be Wales' next first minister after narrowly winning the Welsh Labour leadership election with 51.7% of the vote. Mr Gething, who will become the first black person to lead Wales, beat his rival Jeremy Miles, who took 48.3%.";
+		OKDLogSize = "sm";
+		OKDLogVisible = true;
+	}
+	void OKDlogClose()
+	{
+		OKDLogVisible = false;
+	}
+	#endregion
+
+	#region  ErrorDialogRegion
+	bool ErrorDLogVisible = false;
+	string ErrorDlogMessage = string.Empty;
+	string ErrorDLogSize = string.Empty;
+
+	void ErrorOnClick()
+	{
+		ErrorDlogMessage = "Vaughan Gething is set to be Wales' next first minister after narrowly winning the Welsh Labour leadership election with 51.7% of the vote. Mr Gething, who will become the first black person to lead Wales, beat his rival Jeremy Miles, who took 48.3%.";
+		ErrorDLogSize = "sm";
+		ErrorDLogVisible = true;
+	}
+	void ErrorModalClose()
+	{
+		ErrorDLogVisible = false;
+	}
+	#endregion
+
+	#region  DeleteDialogRegion
+
+	bool DeleteDLogVisible = false;
+	string DeleteDlogCaption = string.Empty;
+	string DeleteDlogMessage = string.Empty;
+	string DeleteDLogSize = string.Empty;
+	string DeleteID = string.Empty;
+	void DeleteOnClick()
+	{
+		DeleteDlogCaption = "Delete?";
+		DeleteDlogMessage = "Do you want to permanently delete the record for John DOA";
+		DeleteDLogSize = "sm";
+		DeleteID = Guid.NewGuid().ToString();
+		DeleteDLogVisible = true;
+	}
+	void DeleteResponse(string Id)
+	{
+		DeleteDLogVisible = false;
+		if (string.IsNullOrEmpty(Id))
+		{
+			return;
+		}
+		Person? person = FilteredList.SingleOrDefault(r => r.Id.ToString() == Id);
+		if (person == null)
+		{
+			DeleteDLogVisible = false;
+			ErrorDlogMessage = "Delete Selected Person: Can't find selected person with ID: " + Id +
+				". Has the record been deleted by another user?";
+			ErrorDLogSize = Globals.DLogSizeLarge;
+			ErrorDLogVisible = true;
+			return;
+		}
+		DeleteDLogVisible = false;
+		FilteredList.Remove(person);
+		//StateHasChanged();
+	}
+	#endregion
+	#region  EditRegion
+	string ShowEdit { get; set; } = "";
+	void EditOnClick()
+	{
+		ShowEdit = "show";
+	}
+	void HideEditClick()
+	{
+		// Is the help panel showing?
+		if (ShowEdit == "show")
+		{
+			ShowEdit = "";
+		}
+	}
+	void SaveClick()
+	{
+		HideEditClick();
+	}
+	#endregion
 }
 

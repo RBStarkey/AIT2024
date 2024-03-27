@@ -8,9 +8,11 @@ namespace BlazorApp.Shared
     public class Globals
     {
 		public const string AITLtd = "ACCESSible IT Ltd";
+		public const string Version = "v2.01";
 		public const string DocTypeDDL = "DDL";
-        public const string Select = "Select...";
-        public const string NotKnown = "(Not Known)";
+        public const string SelectDotDotDot = "Select...";
+		public const string NotStated = "Not Stated";
+		public const string NotKnown = "(Not Known)";
         public const string Male = "Male";
         public const string Female = "Female";
         public const string AddNew = "(Add New Item)";
@@ -29,6 +31,8 @@ namespace BlazorApp.Shared
         public const string BlobContainerDoesNotExist = "Blob container does mot exist";
         public const string OK = "OK";
 		public const string SearchDotDotDot = "Search...";
+		public const string DLogSizeLarge = "lg";
+		public const string DLogSizeSmall = "sm";
 
 		public static bool IsValidEmail(string email)
         {
@@ -57,11 +61,13 @@ namespace BlazorApp.Shared
             }
             catch (RegexMatchTimeoutException e)
             {
+				Console.WriteLine("IsValidEmail - RegexMatchTimeoutException: " + e.Message);
                 return false;
             }
             catch (ArgumentException e)
             {
-                return false;
+				Console.WriteLine("IsValidEmail - ArgumentException: " + e.Message);
+				return false;
             }
             try
             {
@@ -70,9 +76,10 @@ namespace BlazorApp.Shared
                     @"(?(\[)(\[(\d{1,3}\.){3}\d{1,3}\])|(([0-9a-z][-0-9a-z]*[0-9a-z]*\.)+[a-z0-9][\-a-z0-9]{0,22}[a-z0-9]))$",
                     RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
             }
-            catch (RegexMatchTimeoutException)
+            catch (RegexMatchTimeoutException ex)
             {
-                return false;
+				Console.WriteLine("IsValidEmail - RegexMatchTimeoutException: " + ex.Message);
+				return false;
             }
         }
         public static DateTime GetUKDateTime()

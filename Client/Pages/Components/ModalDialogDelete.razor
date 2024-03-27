@@ -1,0 +1,54 @@
+﻿<div class="modal rounded" tabindex="-1" style="display:block;" role="dialog">
+	<div class="modal-dialog modal-@DLogSize">
+		<div class="modal-content p-2">
+			<div class="modal-header alert-danger">
+				<h4 class="modal-title">Delete?</h4>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+						@onclick="() => YesClick(false)">
+				</button>
+			</div>
+			<div class="modal-body" style="background-color:azure	">
+				<div class="col d-flex justify-content-center p-2">
+					<h5>@Message </h5>
+				</div>
+			</div>
+			<div class="modal-footer" style="background-color:silver">
+				<div class="col d-flex justify-content-start">
+					<button type="button" class="btn btn-danger ml-2" style="width:5em"
+							@onclick="() => YesClick(true)">
+						Yes
+					</button>
+				</div>
+				<div class="col d-flex justify-content-end">
+					<button type="button" class="btn btn-primary" style="width:5em"
+							@onclick="() => YesClick(false)">
+						Cancel
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public string Message { get; set; }
+	[Parameter]
+	public string TargetId { get; set; }
+	[Parameter]
+	public string DLogSize { get; set; }// e.g. sm or lg
+	[Parameter]
+	public EventCallback<string> OnDelete { get; set; }
+
+	Task YesClick(bool yesClicked)
+	{
+		if (yesClicked)
+		{
+			return OnDelete.InvokeAsync(TargetId.ToString());
+		}
+		else
+		{
+			return OnDelete.InvokeAsync(string.Empty);
+		}
+	}
+}

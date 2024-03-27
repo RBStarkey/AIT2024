@@ -13,7 +13,6 @@ namespace BlazorApp.Client.Models
 
 		[DisplayName("Title")]
 		[Required(ErrorMessage = "Select a Title")]
-		[MinLength(2, ErrorMessage = "Title must be two characters or more")]
 		public string Title { get; set; } = string.Empty;
 
         [DisplayName("Last Name")]
@@ -23,17 +22,22 @@ namespace BlazorApp.Client.Models
 
 		[DisplayName("Middle Name")]
         [StringLength(50, ErrorMessage = "Middle Name is too long. (Max chars: 50)")]
-        public string MiddleName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; } = string.Empty;
 
 		[DisplayName("First Name")]
         [Required(ErrorMessage = "First Name is required")]
         [StringLength(50, ErrorMessage = "First Name is too long. (Max chars: 50)")]
         public string FirstName { get; set; } = string.Empty;
 
-        [DisplayName("Company Name")]
+		[DisplayName("Gender")]
+		[Required(ErrorMessage = "Gender is required")]
+		[StringLength(10, ErrorMessage = "Gender is too long. (Max chars: 10)")]
+		public string Gender { get; set; } = string.Empty;
+
+		[DisplayName("Company Name")]
         [Required (ErrorMessage = "Company Name is required")]
         [StringLength(256, ErrorMessage = "Company Name is too long. (Max chars: 256)")]
-        public string CompanyName { get; set; } = string.Empty;
+		public string CompanyName { get; set; } = string.Empty;
 
         [DisplayName("Phone")]
         [Required(ErrorMessage = "Phone Number is required")]
@@ -44,8 +48,8 @@ namespace BlazorApp.Client.Models
 		[DisplayName("Email")]
         [Required(ErrorMessage = "Email is required")]
         [DataType(DataType.EmailAddress)]
-        [StringLength(256, ErrorMessage = "Email is too long. (Max chars: 256)")]
-        [RegularExpression(@"^[A-Za-z0-9](([_\.\-]?[a-zA-Z0-9]+)*)@([A-Za-z0-9]+)(([\.\-‌​]?[a-zA-Z0-9]+)*)\.([A-Za-z]{2,})$", ErrorMessage = "Email is not well formed")]
+        //[StringLength(256, ErrorMessage = "Email is too long. (Max chars: 256)")]
+        //[RegularExpression(@"^[A-Za-z0-9](([_\.\-]?[a-zA-Z0-9]+)*)@([A-Za-z0-9]+)(([\.\-‌​]?[a-zA-Z0-9]+)*)\.([A-Za-z]{2,})$", ErrorMessage = "Email is not well formed")]
         public string? EmailAddress { get; set; }
 
         [DisplayName("Modified Date-Time")]
@@ -54,5 +58,31 @@ namespace BlazorApp.Client.Models
 
 		[DisplayName("Search Terms")]
 		public string SearchTerms { get; set; } = string.Empty;
+
+		public string UpdateSearchTerms()
+		{
+			string searchTerms = Id.ToString();
+			searchTerms += "|" + Title;
+			searchTerms += "|" + LastName;
+			searchTerms += "|" + FirstName;
+			if(!string.IsNullOrEmpty(MiddleName))
+			{
+				searchTerms += "|" + MiddleName;
+			}
+			else
+			{
+				searchTerms += "|" + string.Empty;
+			}
+			searchTerms += "|" + Gender;
+			searchTerms += "|" + CompanyName;
+			searchTerms += "|" + Phone;
+			searchTerms += "|" + EmailAddress;
+			searchTerms += "|" + ModifiedDate.ToString("dd MMM yyyy");
+			return searchTerms;
+		}
+		public string FullName()
+		{
+			 return $"{ LastName }, {FirstName}, {MiddleName}";
+		}
 	}
 }

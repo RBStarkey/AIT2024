@@ -1,0 +1,36 @@
+﻿<div class="modal rounded" tabindex="-1" style="display:block;" role="dialog">
+	<div class="modal-dialog modal-@DLogSize">
+		<div class="modal-content p-2">
+			<div class="modal-header alert-danger">
+				<h4 class="modal-title">Error!</h4>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+						@onclick=@ErrorModalClose>
+				</button>
+			</div>
+			<div class="modal-body" style="background-color:azure	">
+				<div class="col d-flex justify-content-center p-2">
+					&nbsp;&nbsp;
+					<h5>@Message</h5>
+				</div>
+			</div>
+			<div class="modal-footer" style="background-color:gainsboro">
+				<button type="button" class="btn btn-primary" @onclick=@ErrorModalClose style="width:5em">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+@code {
+	// https://www.claudiobernasconi.ch/2021/03/26/blazor-modal-dialog-component/
+
+	[Parameter]
+	public string? Message { get; set; } = string.Empty;
+	[Parameter]
+	public EventCallback<bool> OnClose { get; set; }
+	[Parameter]
+	public string? DLogSize { get; set; } = string.Empty; // e.g. sm or lg
+
+	private Task ErrorModalClose()
+	{
+		return OnClose.InvokeAsync(true);
+	}
+}

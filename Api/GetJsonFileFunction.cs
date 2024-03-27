@@ -1,16 +1,12 @@
-using System.Net;
-using Azure.Storage.Blobs;
+using Azure;
 using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using BlazorApp.Client.Models;
-using Azure.Storage.Blobs.Models;
-using Azure;
-using Newtonsoft.Json;
-using System.Text;
-using System.Reflection.Metadata;
 using System.Collections.Specialized;
+using System.Net;
 
 namespace Api
 {
@@ -53,10 +49,11 @@ namespace Api
 				string jsonFile = blobDownloadResult.Value.Content.ToString();
 
 				response.WriteString(jsonFile);
+				_logger.LogInformation("jsonFile length: " + jsonFile.Length.ToString());
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError("GetJsonFile - Exception: " + ex.Message);
+				_logger.LogInformation("GetJsonFile - Exception: " + ex.Message);
 			}
 			return response;
 		}
