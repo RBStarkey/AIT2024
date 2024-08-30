@@ -8,12 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.2" PrivateAssets="all" />
+    <Content Include="Services\DataRepo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.21.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.8" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
+    <PackageReference Include="Toolbelt.Blazor.HttpClientInterceptor" Version="10.2.0" />
   </ItemGroup>
 
 
@@ -30,7 +36,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\Data\People.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

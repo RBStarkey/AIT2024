@@ -24,13 +24,13 @@ namespace BlazorApp.Client.Services
 		static readonly string containerName = "ait2024container";
 		static readonly BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
-		public static async Task<List<Person>> GetPersonList()
+		public async Task<List<Person>> GetPersonList()
 		{
 			List<Person> personList = [];
 			try
 			{
 
-				BlobClient blobClient = containerClient.GetBlobClient("People.json");   //  People.json  BoysAndGirls.json  Contacts90.json
+				BlobClient blobClient = containerClient.GetBlobClient("Persons.json");   //  Persons.json  BoysAndGirls.json  Contacts90.json
 
 				Response<BlobDownloadResult> blobDownloadResult = await blobClient.DownloadContentAsync();
 
@@ -40,11 +40,6 @@ namespace BlazorApp.Client.Services
 				{
 					personList = [];
 				}
-				//IQueryable<Person> IQ = Enumerable.Empty<Person>().AsQueryable();
-				//if (!string.IsNullOrEmpty(jsonFile))
-				//{
-				//    IQ = JsonConvert.DeserializeObject<List<Person>>(jsonFile).AsQueryable();
-				//}
 			}
 			catch (Exception ex)
 			{

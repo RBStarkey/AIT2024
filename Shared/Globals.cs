@@ -8,7 +8,7 @@ namespace BlazorApp.Shared
     public class Globals
     {
 		public const string AITLtd = "ACCESSible IT Ltd";
-		public const string Version = "v2.01";
+		public const string Version = "v2.02";
 		public const string DocTypeDDL = "DDL";
         public const string SelectDotDotDot = "Select...";
 		public const string NotStated = "Not Stated";

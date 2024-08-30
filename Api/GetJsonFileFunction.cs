@@ -14,19 +14,64 @@ namespace Api
 	{
 		private readonly ILogger _logger = loggerFactory.CreateLogger<GetJsonFileFunction>();
 
+
 		[Function("GetJsonFile")]
-		public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
+		public static async Task<HttpResponseData> GetJsonFile([HttpTrigger(
+			AuthorizationLevel.Anonymous
+			, "get"
+			, Route="Filename")]
+				HttpRequestData req)
+		{
+			try
+			{
+				NameValueCollection? nameValueCollection = System.Web.HttpUtility.ParseQueryString(req.Url.Query) ?? [];
+				string fileName = nameValueCollection["filename"] ?? "";
+				if (string.IsNullOrEmpty(fileName))
+				{
+					var responseBad = req.CreateResponse(HttpStatusCode.BadRequest);
+					return responseBad;
+				}
+
+				//C:\Users\RaymondStarkey\source\repos\AIT2024\Client\wwwroot\Data\People.json
+
+				//http://localhost:7071/api/Filename?filename=People.json
+				//http://localhost:7071/api/Filename?filename=Contacts90.json
+				//http://localhost:7071/api/Filename?filename=BoysAndGirls.json
+
+				HttpResponseData responseOK = req.CreateResponse(HttpStatusCode.OK);
+				using (FileStream stream = File.Open("wwwroot/Data/" + fileName, FileMode.Open))
+				{
+					await stream.CopyToAsync(responseOK.Body);
+				}
+				return responseOK;
+			}
+			catch (Exception ex)
+			{
+				Console.Write("GetJsonFile - Exception: " + ex.Message);
+				HttpResponseData responseBad = req.CreateResponse(HttpStatusCode.InternalServerError);
+				await responseBad.WriteAsJsonAsync("GetJsonFile - Exception: " + ex.Message);
+				return responseBad;
+			}
+		}
+
+
+
+
+
+
+		[Function("GetBlobFile")]
+		public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
 		{
 			var response = req.CreateResponse(HttpStatusCode.OK);
 			try
 			{
-				//http://localhost:7071/api/GetJsonFile?key=People.json
+				//http://localhost:7071/api/GetBlobFile?key=People.json
 
 				_logger.LogInformation("C# HTTP trigger function - GetJsonFile - processed a request.");
 				response.Headers.Add("Content-Type", "application/json; charset=utf-8");
 
 				NameValueCollection? nameValueCollection = System.Web.HttpUtility.ParseQueryString(req.Url.Query) ?? [];
-				string fileName = nameValueCollection["fileName"];
+				string fileName = nameValueCollection["key"]??"";
 				if(string.IsNullOrEmpty(fileName))
 				{
 					_logger.LogError("GetJsonFile - NameValueCollection: Filename is null");
@@ -42,7 +87,7 @@ namespace Api
 
 				string containerName = "ait2024container";
 				BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-				BlobClient blobClient = containerClient.GetBlobClient(fileName);   // People.json  BoysAndGirls.json  Contacts90.json
+				BlobClient blobClient = containerClient.GetBlobClient(fileName);   // Person.json  BoysAndGirls.json  Contacts90.json
 
 				Response<BlobDownloadResult> blobDownloadResult = blobClient.DownloadContent();
 

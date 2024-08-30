@@ -1,6 +1,8 @@
 ﻿@page "/database"
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject HttpClient Http
 @inject NavigationManager NavMan
+@inject IWebAssemblyHostEnvironment Env;
 
 <div class="container-fluid p-0 m-0">
 	<div class="row w-100 d-inline-flex mb-2" style="background-color:navy">
@@ -33,6 +35,7 @@
 			&nbsp;@SearchParamError.ToString()
 		</div>
 	}
+	<!--Modals-->
 	@if (ErrorDLogVisible)
 	{
 		<ModalDialogError Message=@ErrorDlogMessage
@@ -336,6 +339,7 @@
 			</EditForm>
 		</div>
 	</div>
+
 	<!--Help-->
 	<div class="offcanvas offcanvas-end @ShowHelp" tabindex="-1" id="offcanvasExample"
 		 aria-labelledby="offcanvasExampleLabel"
@@ -412,6 +416,8 @@
 	List<Person> PersonList = new(); // All the records.  This list is never deleted from
 	List<Person> FilteredList = new();
 
+	static string Json { get; set; } = string.Empty;
+
 	string? Filter { get; set; } = string.Empty;
 
 	string SearchParamError = string.Empty;
@@ -424,10 +430,34 @@
 		try
 		{
 			IsLoading = true;
-			string jsonFile = await Http.GetStringAsync("/api/GetJsonFile?fileName=Persons.json");
-			PersonList = JsonConvert.DeserializeObject<List<Person>>(jsonFile) ?? [];
-			FilteredList = JsonConvert.DeserializeObject<List<Person>>(jsonFile) ?? [];
-			IsLoading = false;
+			string jsonFile = string.Empty;
+			HttpClient client = new();
+			HttpResponseMessage response = new();
+			List<Person> personList = new();
+
+			if (Env.IsDevelopment())
+			{
+				response = await client.GetAsync("http://localhost:7071/api/Filename?filename=People.json");
+			}
+			else
+			{
+				// https://rbsstoragev2.z35.web.core.windows.net/
+				response = await client.GetAsync("https://rbsstoragev2.z35.web.core.windows.net/api/Filename?filename=People.json");
+			}
+			if (response.IsSuccessStatusCode)
+			{
+				PersonList = await response.Content.ReadFromJsonAsync<List<Person>>();
+				FilteredList = PersonList.ToList();
+				IsLoading = false;
+			}
+			else
+			{
+				OKDlogCaption = "";
+				OKDlogMessage = "Reponse from https://rbsstoragev2.z35.web.core.windows.net/" +
+				" failed, Status code: " + response.StatusCode.ToString();
+				OKDLogSize = "sm";
+				OKDLogVisible = true;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -646,10 +676,11 @@
 	string OKDlogMessage = string.Empty;
 	string OKDLogSize = string.Empty;
 	public bool OKDLogVisible { get; set; } = false;
+
 	void OKOnClick()
 	{
 		OKDlogCaption = "OK";
-		OKDlogMessage = "Vaughan Gething is set to be Wales' next first minister after narrowly winning the Welsh Labour leadership election with 51.7% of the vote. Mr Gething, who will become the first black person to lead Wales, beat his rival Jeremy Miles, who took 48.3%.";
+		OKDlogMessage = "Test message.";
 		OKDLogSize = "sm";
 		OKDLogVisible = true;
 	}
@@ -713,6 +744,7 @@
 		//StateHasChanged();
 	}
 	#endregion
+
 	#region  EditRegion
 	string ShowEdit { get; set; } = "";
 	void EditOnClick()

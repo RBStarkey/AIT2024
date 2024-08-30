@@ -10,7 +10,6 @@
 	<title>AIT 2024</title>
 	<base href="/" />
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-	<!--<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />-->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 	<link rel="stylesheet" href="css/app.css" />
 	<link rel="icon" type="image/png" href="favicon.png" />
@@ -18,6 +17,11 @@
 </head>
 
 <body>
+	<div id="blazor-error-ui">
+		An unhandled error has occurred.
+		<a href="" class="reload">Reload</a>
+		<a class="dismiss">🗙</a>
+	</div>
 	<div id="app">
 		<svg class="loading-progress">
 			<circle r="40%" cx="50%" cy="50%" />
@@ -25,13 +29,30 @@
 		</svg>
 		<div class="loading-progress-text"></div>
 	</div>
-	<div id="blazor-error-ui">
-		An unhandled error has occurred.
-		<a href="" class="reload">Reload</a>
-		<a class="dismiss">🗙</a>
-	</div>
-	<script src="_framework/blazor.webassembly.js"></script>
 
+	<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/@popperjs/core@2"></script>
+	<script src="_framework/blazor.webassembly.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+	<script>
+		function SetCheckboxesToFalse() {
+			try
+			{
+				let inputs = document.getElementsByTagName('input');
+				for (let i in inputs)
+				{
+					if (inputs[i].type === 'checkbox')
+					{
+						inputs[i].checked = false;
+					}
+				}
+			}
+			catch (ex)
+			{
+				alert("SetCheckboxesToFalse - Exception: " + ex.message);
+			}
+		}
+	</script>
 </body>
 
 </html>

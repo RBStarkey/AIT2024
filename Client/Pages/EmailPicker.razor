@@ -1,6 +1,306 @@
 ﻿@page "/emailpicker"
-<h3>EmailPicker</h3>
+@using BlazorApp.Client.Models
+@using BlazorApp.Client.Services
+@inject IJSRuntime JSRuntime
+<style>
+	.dropbtn {
+		background-color: #04AA6D;
+		color: white;
+		padding: 8px;
+		font-size: 16px;
+		border: none;
+	}
+
+	.dropdown {
+		position: relative;
+		display: inline-block;
+	}
+
+	.dropdown-content {
+		display: none;
+		position: absolute;
+		background-color: #f1f1f1;
+		min-width: 160px;
+		box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+		z-index: 1;
+	}
+
+		.dropdown-content a {
+			color: black;
+			padding: 12px 16px;
+			text-decoration: none;
+			display: block;
+		}
+
+			.dropdown-content a:hover {
+				background-color: #ddd;
+			}
+
+	.dropdown:hover .dropdown-content {
+		display: block;
+	}
+
+	.dropdown:hover .dropbtn {
+		background-color: #3e8e41;
+	}
+</style>
+
+<div class="sticky-top" style="background-color:aliceblue">
+
+	<h3 class="sticky-top">Email Picker</h3>
+<div class="row w-100">
+	<div class="col-sm-4">
+		<h5>
+			The list of names represents a mailing list from a customer database using some sort of selection criteria. The data is fictitious.
+		</h5>
+	</div>
+	<div class="col-sm-4">
+		<h5>
+			There are 90 names; you can filter using the <strong>Starts With</strong> and  <strong>Contains</strong> search boxes.
+			Additional information about the person is revealed when you hover over the note icon.
+		</h5>
+	</div>
+	<div class="col-sm-4">
+		<h5>
+			Tick a name to add an email to the list.
+			You can cut and paste the list into the <i>To</i> or <i>BCC</i> field of your
+			mail application from the text-box below...
+		</h5>
+	</div>
+</div>
+<div class="row w-100">
+	<div class="col-sm-2 d-flex align-items-center">
+		<div class="input-group">
+			<div class="input-group-prepend">
+				<span class="input-group-text" id="basic-addon1">
+					<i class="bi bi-search"></i>
+				</span>
+			</div>
+			<input type="text" class="form-control border-dark" placeholder="Last Name Starts With"
+				   aria-label="Search" aria-describedby="basic-addon1"
+				   @bind="SearchParamBegins"
+				   @oninput="SearchParamStartsWithOnInput">
+		</div>
+	</div>
+	<div class="col-sm-2 d-flex align-items-center">
+		<div class="input-group">
+			<span class="input-group-text" id="basic-addon1">
+				<i class="bi bi-search"></i>
+			</span>
+			<input type="text" class="form-control border-dark" placeholder="Name Contains"
+				   aria-label="Search" aria-describedby="basic-addon1"
+				   @bind="SearchParamContains"
+				   @oninput="SearchParamContainsOnInput">
+		</div>
+	</div>
+	<div class="col-sm-7">
+		<textarea class="w-100" value="@string.Join("; ", EmailList).ToString()"
+				  style="height:6em;background-color:white;
+                    border-color:lightgray" readonly>
+			</textarea>
+	</div>
+	<div class="col-sm-1 d-flex align-items-center">
+		<button class="btn btn-primary"
+				@onclick="ClearButtonOnClick">
+			Clear
+		</button>
+	</div>
+</div>
+</div>
+@if (ShowSpinner)
+{
+	<div class="spinner-border" role="status">
+		<span class="visually-hidden">Loading...</span>
+	</div>
+}
+<div class="row w-100 border-top mt-2">
+	<div class="col-sm-12 col-md-12 col-lg-6 col-xl-4">
+		@for (int i = 0; i < Col1List.Count; i++)
+		{
+			@if (Col1List[i].IsVisible)
+			{
+				<div class="col align-middle">
+					@{
+						string col1Email = Col1List[i].Email.ToString();
+					}
+					<input id=@("chk1" + i.ToString()) class="form-check-input border-dark p-0 m0" type="checkbox" style="width:2em;height:2em;" value=""
+						   @onchange="(e => ChkOnChange(e,  col1Email))" />
+					&nbsp;	
+					<div class="dropdown">
+						<label id=@("ddm1" + i.ToString()) class="btn btn-info dropdown-toggle p-0 pt-1" style="width:2.5em">
+							<i class="bi bi-card-text"></i>
+						</label>
+						<div class="dropdown-content p-2" style="background-color:cornsilk">
+							<button class="dropdown-item" type="button">@Col1List[i].Email</button>
+							<button class="dropdown-item" type="button">Extension: <strong>@Col1List[i].Extension</strong></button>
+							<button class="dropdown-item" type="button">Department: <strong>@Col1List[i].Department</strong></button>
+							<button class="dropdown-item" type="button">Job Description: <strong>@Col1List[i].JobDescription</strong></button>
+						</div>
+					</div>
+					&nbsp;
+					<label class="label" style="font-size:1.2em	5em;">
+						@Col1List[i].ContactName.ToString()
+					</label>
+				</div>
+			}
+		}
+	</div>
+	<div class="col-sm-12 col-md-12 col-lg-6 col-xl-4 align-middle">
+		@for (int i = 0; i < Col2List.Count; i++)
+		{
+			@if (Col2List[i].IsVisible)
+			{
+				<div class="form-col">
+					@{
+						string col2Email = Col2List[i].Email.ToString();
+					}
+					<input id=@("chk2" + i.ToString()) class="form-check-input border-dark" type="checkbox" style="width:1.65em;height:1.65em;margin-top:0.75em" value=""
+						   @onchange="(e => ChkOnChange(e,  col2Email))" />
+					&nbsp;
+					<div class="dropdown">
+						<label id=@("ddm2" + i.ToString()) class="btn btn-info dropdown-toggle p-0" style="width:2.5em">
+							<i class="bi bi-card-text"></i>
+						</label>
+						<div class="dropdown-content p-2" style="background-color:cornsilk">
+							<button class="dropdown-item" type="button">@Col2List[i].Email</button>
+							<button class="dropdown-item" type="button">Extension: <strong>@Col2List[i].Extension</strong></button>
+							<button class="dropdown-item" type="button">Department: <strong>@Col2List[i].Department</strong></button>
+							<button class="dropdown-item" type="button">Job Description: <strong>@Col2List[i].JobDescription</strong></button>
+						</div>
+					</div>
+					&nbsp;
+					<label class="label mt-1" style="font-size:1.5em">
+						@Col2List[i].ContactName.ToString()
+					</label>
+				</div>
+			}
+		}
+	</div>
+	<div class="col-sm-12 col-md-12 col-lg-6 col-xl-4 align-middle">
+		@for (int i = 0; i < Col3List.Count; i++)
+		{
+			@if (Col3List[i].IsVisible)
+			{
+				<div class="form-col">
+					@{
+						string col3Email = Col3List[i].Email.ToString();
+					}
+					<input id=@("chk3" + i.ToString()) class="form-check-input border-dark" type="checkbox" style="width:1.65em;height:1.65em;margin-top:0.75em" value=""
+						   @onchange="(e => ChkOnChange(e,  col3Email))" />
+					&nbsp;
+					<div class="dropdown">
+						<label id=@("ddm3" + i.ToString()) class="btn btn-info dropdown-toggle p-0" style="width:2.5em">
+							<i class="bi bi-card-text"></i>
+						</label>
+						<div class="dropdown-content p-2" style="background-color:cornsilk">
+							<button class="dropdown-item" type="button">@Col3List[i].Email</button>
+							<button class="dropdown-item" type="button">Extension: <strong>@Col3List[i].Extension</strong></button>
+							<button class="dropdown-item" type="button">Department: <strong>@Col3List[i].Department</strong></button>
+							<button class="dropdown-item" type="button">Job Description: <strong>@Col3List[i].JobDescription</strong></button>
+						</div>
+					</div>
+					&nbsp;
+					<label class="label mt-1" style="font-size:1.5em">
+						@Col3List[i].ContactName.ToString()
+					</label>
+				</div>
+			}
+		}
+	</div>
+</div>
 
 @code {
+	private List<Contact> Col1List = new List<Contact>();
+	private List<Contact> Col2List = new List<Contact>();
+	private List<Contact> Col3List = new List<Contact>();
+	private DataRepo Repo = new DataRepo();
+	private List<string> EmailList = new List<string>();
+	private string SearchParamBegins = string.Empty;
+	private string SearchParamContains = string.Empty;
 
+	bool ShowSpinner { get; set; } = true;
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			// JsonBlobService blobService = new();
+			// List<Person>personList  = await blobService.GetPersonList();
+
+			await Repo.LoadContactList();
+			Col1List.AddRange(Repo.ContactList.GetRange(0, 30));
+			Col2List.AddRange(Repo.ContactList.GetRange(30, 30));
+			Col3List.AddRange(Repo.ContactList.GetRange(60, 30));
+			ShowSpinner = false;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("OnInitializedAsync - Exception: " + ex.Message);
+		}
+	}
+
+	private void ChkOnChange(ChangeEventArgs e, string eMail)
+	{
+		if ((bool)e.Value)
+		{
+			// Is this email already in the list?
+			string email = EmailList.FirstOrDefault(x => x == eMail);
+			if (email == null)
+			{
+				EmailList.Add(eMail);
+			}
+		}
+		else
+		{
+			EmailList.Remove(eMail);
+		}
+	}
+
+	private void SearchParamStartsWithOnInput(ChangeEventArgs e)
+	{
+		string searchTerm = e.Value.ToString();
+		foreach (Contact contact in Repo.ContactList)
+		{
+			if (contact.ContactName.ToLower().StartsWith(searchTerm.ToLower()))
+			{
+				contact.IsVisible = true;
+			}
+			else
+			{
+				contact.IsVisible = false;
+			}
+		}
+		SearchParamContains = string.Empty;
+	}
+
+	private void SearchParamContainsOnInput(ChangeEventArgs e)
+	{
+		string searchTerm = e.Value.ToString();
+		foreach (Contact contact in Repo.ContactList)
+		{
+			if (contact.ContactName.ToLower().Contains(searchTerm.ToLower()))
+			{
+				contact.IsVisible = true;
+			}
+			else
+			{
+				contact.IsVisible = false;
+			}
+		}
+		SearchParamBegins = string.Empty;
+	}
+
+	private async Task ClearButtonOnClick(MouseEventArgs e)
+	{
+		EmailList.Clear();
+		foreach (Contact contact in Repo.ContactList)
+		{
+			contact.IsVisible = true;
+		}
+		await JSRuntime.InvokeVoidAsync("SetCheckboxesToFalse");
+		SearchParamBegins = string.Empty;
+		SearchParamContains = string.Empty;
+	}
 }
+
+
