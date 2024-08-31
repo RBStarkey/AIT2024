@@ -31,7 +31,6 @@ namespace Api
 					var responseBad = req.CreateResponse(HttpStatusCode.BadRequest);
 					return responseBad;
 				}
-
 				//C:\Users\RaymondStarkey\source\repos\AIT2024\Client\wwwroot\Data\People.json
 
 				//http://localhost:7071/api/Filename?filename=People.json
@@ -53,11 +52,6 @@ namespace Api
 				return responseBad;
 			}
 		}
-
-
-
-
-
 
 		[Function("GetBlobFile")]
 		public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
