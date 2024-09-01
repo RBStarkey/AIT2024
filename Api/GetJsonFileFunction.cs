@@ -19,12 +19,14 @@ namespace Api
 		public static async Task<HttpResponseData> GetJsonFile([HttpTrigger(
 			AuthorizationLevel.Anonymous
 			, "get"
-			, Route="Filename")]
+			)]
 				HttpRequestData req)
 		{
 			try
 			{
 				NameValueCollection? nameValueCollection = System.Web.HttpUtility.ParseQueryString(req.Url.Query) ?? [];
+				var temp = nameValueCollection.GetValues(0);
+
 				string fileName = nameValueCollection["filename"] ?? "";
 				if (string.IsNullOrEmpty(fileName))
 				{
@@ -32,10 +34,9 @@ namespace Api
 					return responseBad;
 				}
 				//C:\Users\RaymondStarkey\source\repos\AIT2024\Client\wwwroot\Data\People.json
+				// "GetJsonFile - Exception: Could not find file 'C:\\home\\site\\wwwroot\\wwwroot\\Data\\People.json'."
 
-				//http://localhost:7071/api/Filename?filename=People.json
-				//http://localhost:7071/api/Filename?filename=Contacts90.json
-				//http://localhost:7071/api/Filename?filename=BoysAndGirls.json
+				//http://localhost:7071/api/GetJsonFile?filename=People.json 
 
 				HttpResponseData responseOK = req.CreateResponse(HttpStatusCode.OK);
 				using (FileStream stream = File.Open("wwwroot/Data/" + fileName, FileMode.Open))
@@ -65,8 +66,8 @@ namespace Api
 				response.Headers.Add("Content-Type", "application/json; charset=utf-8");
 
 				NameValueCollection? nameValueCollection = System.Web.HttpUtility.ParseQueryString(req.Url.Query) ?? [];
-				string fileName = nameValueCollection["key"]??"";
-				if(string.IsNullOrEmpty(fileName))
+				string fileName = nameValueCollection["key"] ?? "";
+				if (string.IsNullOrEmpty(fileName))
 				{
 					_logger.LogError("GetJsonFile - NameValueCollection: Filename is null");
 					return response;

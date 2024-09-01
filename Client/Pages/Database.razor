@@ -437,15 +437,16 @@
 
 			if (Env.IsDevelopment())
 			{
-				response = await client.GetAsync("http://localhost:7071/api/Filename?filename=People.json");
+				//string urlString = "https://delightful-sky-05669dc03.4.azurestaticapps.net/api/GetJsonFile?filename=People.json";
+				//response = await client.GetAsync(urlString);
+				response = await client.GetAsync("http://localhost:7071/api/GetJsonFile?filename=People.json");
 			}
 			else
 			{
 				// https://delightful-sky-05669dc03.4.azurestaticapps.net
-
 				// https://www.accessibleit.net/
 				// https://rbsstoragev2.z35.web.core.windows.net/
-				response = await client.GetAsync("https://delightful-sky-05669dc03.4.azurestaticapps.net/api/Filename?filename=People.json");
+				response = await client.GetAsync("https://delightful-sky-05669dc03.4.azurestaticapps.net/api/GetJsonFile?filename=People.json");
 			}
 			if (response.IsSuccessStatusCode)
 			{
@@ -455,10 +456,10 @@
 			}
 			else
 			{
-				OKDlogCaption = "v2.04";
+				OKDlogCaption = Globals.Version;
 				OKDlogMessage = "Reponse from " + response.Content.ToString() +
 				" failed, Status code: " + response.StatusCode.ToString();
-				OKDLogSize = "sm";
+				OKDLogSize = "lg";
 				OKDLogVisible = true;
 			}
 		}
