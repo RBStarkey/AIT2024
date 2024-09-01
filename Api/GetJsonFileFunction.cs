@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Specialized;
 using System.Net;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Api
 {
@@ -39,7 +40,7 @@ namespace Api
 				//http://localhost:7071/api/GetJsonFile?filename=People.json 
 
 				HttpResponseData responseOK = req.CreateResponse(HttpStatusCode.OK);
-				using (FileStream stream = File.Open("wwwroot/Data/" + fileName, FileMode.Open))
+				using (FileStream stream = File.Open("JsonFiles/" + fileName, FileMode.Open))
 				{
 					await stream.CopyToAsync(responseOK.Body);
 				}

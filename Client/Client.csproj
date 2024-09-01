@@ -29,13 +29,13 @@
 
 
   <ItemGroup>
-    <Content Update="wwwroot\Data\BoysAndGirls.json">
+    <Content Update="wwwroot\DataOLD\BoysAndGirls.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\Data\Contacts90.json">
+    <Content Update="wwwroot\DataOLD\Contacts90.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\Data\People.json">
+    <Content Update="wwwroot\DataOLD\People.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

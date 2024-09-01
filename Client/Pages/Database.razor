@@ -434,20 +434,16 @@
 			HttpClient client = new();
 			HttpResponseMessage response = new();
 			List<Person> personList = new();
-
+			string urlString = string.Empty;
 			if (Env.IsDevelopment())
 			{
-				//string urlString = "https://delightful-sky-05669dc03.4.azurestaticapps.net/api/GetJsonFile?filename=People.json";
-				//response = await client.GetAsync(urlString);
-				response = await client.GetAsync("http://localhost:7071/api/GetJsonFile?filename=People.json");
+				urlString = "http://localhost:7071/api/GetJsonFile?filename=People.json";
 			}
 			else
 			{
-				// https://delightful-sky-05669dc03.4.azurestaticapps.net
-				// https://www.accessibleit.net/
-				// https://rbsstoragev2.z35.web.core.windows.net/
-				response = await client.GetAsync("https://delightful-sky-05669dc03.4.azurestaticapps.net/api/GetJsonFile?filename=People.json");
+				urlString = "https://delightful-sky-05669dc03.4.azurestaticapps.net/api/GetJsonFile?filename=People.json";
 			}
+			response = await client.GetAsync(urlString);
 			if (response.IsSuccessStatusCode)
 			{
 				PersonList = await response.Content.ReadFromJsonAsync<List<Person>>();
